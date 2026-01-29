@@ -1,3 +1,6 @@
+Отлично! У вас есть основные изображения. Давайте доработаем код игры, чтобы использовать ваши картинки вместо рисованных элементов. Вот обновленный код с загрузкой ваших изображений:
+
+```html
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -84,11 +87,6 @@
         @keyframes float {
             0%, 100% { transform: translateY(0px); }
             50% { transform: translateY(-10px); }
-        }
-        
-        @keyframes confettiRain {
-            0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
         }
         
         #wordPopup {
@@ -309,6 +307,44 @@
             z-index: 100;
         }
         
+        #loadingScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #1a237e;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            transition: opacity 0.5s ease-out;
+        }
+        
+        .loading-text {
+            font-size: 24px;
+            margin-top: 20px;
+            color: white;
+            text-align: center;
+        }
+        
+        .loading-bar {
+            width: 300px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+        
+        .loading-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #2196F3);
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+        
         @media (max-width: 768px) {
             #ui {
                 top: 10px;
@@ -351,11 +387,23 @@
                 font-size: 18px;
                 padding: 12px 24px;
             }
+            
+            .loading-bar {
+                width: 250px;
+            }
         }
     </style>
 </head>
 <body>
-    <div id="gameContainer">
+    <div id="loadingScreen">
+        <div style="font-size: 48px; color: #FFD700; margin-bottom: 20px;">❄️ Словарный Сугроб ❄️</div>
+        <div class="loading-text" id="loadingText">Загрузка изображений...</div>
+        <div class="loading-bar">
+            <div id="loadingFill" class="loading-fill" style="width: 0%"></div>
+        </div>
+    </div>
+    
+    <div id="gameContainer" style="display: none;">
         <canvas id="gameCanvas"></canvas>
         
         <div id="ui">
@@ -486,7 +534,7 @@
         // Игровые переменные
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        let gameState = 'playing';
+        let gameState = 'loading';
         let score = 0;
         let lives = 3;
         let level = 1;
@@ -509,7 +557,20 @@
         let snowdriftInterval = 2000;
         let confetti = [];
 
+        // Загружаемые изображения
+        const images = {
+            background: null,
+            janitor_left: null,
+            janitor_right: null,
+            roof: null,
+            snowdrift: null
+        };
+
         // DOM элементы
+        const loadingScreen = document.getElementById('loadingScreen');
+        const loadingText = document.getElementById('loadingText');
+        const loadingFill = document.getElementById('loadingFill');
+        const gameContainer = document.getElementById('gameContainer');
         const scoreElement = document.getElementById('score');
         const livesElement = document.getElementById('lives');
         const wordsCountElement = document.getElementById('wordsCount');
@@ -530,8 +591,143 @@
         const restartBtn = document.getElementById('restartBtn');
         const comboCounter = document.getElementById('comboCounter');
 
+        // Загрузка изображений
+        function loadImages() {
+            const imageFiles = [
+                { key: 'background', src: 'winter_background.jpg', type: 'jpg' },
+                { key: 'janitor_left', src: 'janitor_left.png', type: 'png' },
+                { key: 'janitor_right', src: 'janitor_right.png', type: 'png' },
+                { key: 'roof', src: 'roof.png', type: 'png' },
+                { key: 'snowdrift', src: 'snowdrift.png', type: 'png' }
+            ];
+
+            let loadedCount = 0;
+            const totalCount = imageFiles.length;
+
+            imageFiles.forEach((file, index) => {
+                const img = new Image();
+                img.onload = () => {
+                    images[file.key] = img;
+                    loadedCount++;
+                    
+                    // Обновляем прогресс загрузки
+                    const progress = Math.round((loadedCount / totalCount) * 100);
+                    loadingFill.style.width = `${progress}%`;
+                    loadingText.textContent = `Загружено: ${loadedCount}/${totalCount} изображений`;
+                    
+                    if (loadedCount === totalCount) {
+                        setTimeout(() => {
+                            loadingScreen.style.opacity = '0';
+                            setTimeout(() => {
+                                loadingScreen.style.display = 'none';
+                                gameContainer.style.display = 'block';
+                                initGame();
+                            }, 500);
+                        }, 500);
+                    }
+                };
+                
+                img.onerror = () => {
+                    console.warn(`Не удалось загрузить изображение: ${file.src}`);
+                    // Создаем заглушку
+                    createPlaceholder(file.key, file.type);
+                    loadedCount++;
+                    
+                    const progress = Math.round((loadedCount / totalCount) * 100);
+                    loadingFill.style.width = `${progress}%`;
+                    
+                    if (loadedCount === totalCount) {
+                        setTimeout(() => {
+                            loadingScreen.style.opacity = '0';
+                            setTimeout(() => {
+                                loadingScreen.style.display = 'none';
+                                gameContainer.style.display = 'block';
+                                initGame();
+                            }, 500);
+                        }, 500);
+                    }
+                };
+                
+                img.src = file.src;
+            });
+        }
+
+        // Создание заглушки для изображения
+        function createPlaceholder(key, type) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            let width, height, color, text;
+            
+            switch(key) {
+                case 'background':
+                    width = 800;
+                    height = 600;
+                    color = '#1a237e';
+                    text = 'ФОН';
+                    break;
+                case 'janitor_left':
+                case 'janitor_right':
+                    width = 80;
+                    height = 120;
+                    color = '#FF6D00';
+                    text = key.includes('left') ? '←' : '→';
+                    break;
+                case 'roof':
+                    width = 300;
+                    height = 200;
+                    color = '#5D4037';
+                    text = 'КРЫША';
+                    break;
+                case 'snowdrift':
+                    width = 100;
+                    height = 70;
+                    color = '#FFFFFF';
+                    text = '❄️';
+                    break;
+                default:
+                    width = 100;
+                    height = 100;
+                    color = '#666';
+                    text = '?';
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            
+            // Градиентный фон
+            const gradient = ctx.createLinearGradient(0, 0, width, height);
+            gradient.addColorStop(0, color);
+            gradient.addColorStop(1, darkenColor(color, 0.3));
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, width, height);
+            
+            // Текст
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 20px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(text, width/2, height/2);
+            
+            // Рамка
+            ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(2, 2, width-4, height-4);
+            
+            const img = new Image();
+            img.src = canvas.toDataURL();
+            images[key] = img;
+        }
+
+        function darkenColor(color, factor) {
+            // Простая функция для затемнения цвета
+            return color; // Упрощённая версия
+        }
+
         // Инициализация игры
         function initGame() {
+            gameState = 'playing';
+            
             // Настройка canvas
             resizeCanvas();
             
@@ -1152,18 +1348,24 @@
             }, 2000);
         }
 
-        // Отрисовка игры
+        // Отрисовка игры с использованием ваших изображений
         function drawGame() {
             // Очистка canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // Градиентный фон
-            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-            gradient.addColorStop(0, '#1a237e');
-            gradient.addColorStop(0.5, '#283593');
-            gradient.addColorStop(1, '#3949ab');
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            // Рисуем фон
+            if (images.background) {
+                // Масштабируем фон под размер canvas
+                ctx.drawImage(images.background, 0, 0, canvas.width, canvas.height);
+            } else {
+                // Градиентный фон (запасной вариант)
+                const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                gradient.addColorStop(0, '#1a237e');
+                gradient.addColorStop(0.5, '#283593');
+                gradient.addColorStop(1, '#3949ab');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
             
             // Снежинки
             snowflakes.forEach(flake => {
@@ -1179,97 +1381,100 @@
             ctx.fillStyle = '#E3F2FD';
             ctx.fillRect(0, canvas.height - 50, canvas.width, 50);
             
-            // Текстура снега
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-            for (let i = 0; i < 50; i++) {
-                const x = (i * 40) % canvas.width;
-                const y = canvas.height - 50 + Math.sin(i * 0.5) * 10;
+            // Крыша (дом)
+            if (images.roof) {
+                // Рисуем крышу в центре вверху
+                const roofWidth = Math.min(300, canvas.width * 0.4);
+                const roofHeight = roofWidth * 0.67; // Сохраняем пропорции
+                const roofX = canvas.width/2 - roofWidth/2;
+                const roofY = 50;
+                ctx.drawImage(images.roof, roofX, roofY, roofWidth, roofHeight);
+            } else {
+                // Запасной вариант: рисуем простой дом
+                ctx.fillStyle = '#5D4037';
+                ctx.fillRect(canvas.width/2 - 150, 50, 300, 200);
+                
+                ctx.fillStyle = '#3E2723';
                 ctx.beginPath();
-                ctx.arc(x, y, 3, 0, Math.PI * 2);
+                ctx.moveTo(canvas.width/2 - 150, 50);
+                ctx.lineTo(canvas.width/2, 0);
+                ctx.lineTo(canvas.width/2 + 150, 50);
+                ctx.closePath();
                 ctx.fill();
             }
             
-            // Дом (вверху)
-            ctx.fillStyle = '#5D4037';
-            ctx.fillRect(canvas.width/2 - 150, 50, 300, 200);
-            
-            // Крыша
-            ctx.fillStyle = '#3E2723';
-            ctx.beginPath();
-            ctx.moveTo(canvas.width/2 - 150, 50);
-            ctx.lineTo(canvas.width/2, 0);
-            ctx.lineTo(canvas.width/2 + 150, 50);
-            ctx.closePath();
-            ctx.fill();
-            
-            // Окна дома
-            ctx.fillStyle = '#FFF3E0';
-            ctx.fillRect(canvas.width/2 - 120, 80, 50, 50);
-            ctx.fillRect(canvas.width/2 + 70, 80, 50, 50);
-            ctx.fillRect(canvas.width/2 - 25, 150, 50, 80);
-            
             // Игрок (дворник)
-            ctx.fillStyle = '#FF6D00';
-            ctx.fillRect(player.x, player.y, player.width, player.height);
-            
-            // Голова игрока
-            ctx.fillStyle = '#FFAB40';
-            ctx.beginPath();
-            ctx.arc(player.x + player.width/2, player.y - 10, 25, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // Лицо
-            ctx.fillStyle = '#5D4037';
-            ctx.beginPath();
-            ctx.arc(player.x + player.width/2 - 8, player.y - 15, 5, 0, Math.PI * 2);
-            ctx.arc(player.x + player.width/2 + 8, player.y - 15, 5, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // Улыбка
-            ctx.beginPath();
-            ctx.arc(player.x + player.width/2, player.y, 10, 0.2, Math.PI - 0.2);
-            ctx.strokeStyle = '#5D4037';
-            ctx.lineWidth = 3;
-            ctx.stroke();
-            
-            // Лопата
-            ctx.fillStyle = '#795548';
-            ctx.fillRect(player.x + player.width - 10, player.y + 20, 5, 80);
-            ctx.fillStyle = '#3E2723';
-            ctx.beginPath();
-            ctx.ellipse(player.x + player.width - 7.5, player.y + 100, 15, 8, 0, 0, Math.PI * 2);
-            ctx.fill();
+            let playerImage = images.janitor_front || images.janitor_right;
+            if (playerImage) {
+                // Определяем направление игрока по движению
+                const playerDirection = getPlayerDirection();
+                if (playerDirection === 'left' && images.janitor_left) {
+                    playerImage = images.janitor_left;
+                } else if (playerDirection === 'right' && images.janitor_right) {
+                    playerImage = images.janitor_right;
+                }
+                
+                // Рисуем игрока с анимацией ходьбы
+                const walkOffset = Math.sin(Date.now() * 0.005) * 3;
+                ctx.drawImage(playerImage, player.x, player.y + walkOffset, player.width, player.height);
+            } else {
+                // Запасной вариант: рисуем простого игрока
+                ctx.fillStyle = '#FF6D00';
+                ctx.fillRect(player.x, player.y, player.width, player.height);
+                
+                ctx.fillStyle = '#FFAB40';
+                ctx.beginPath();
+                ctx.arc(player.x + player.width/2, player.y - 10, 25, 0, Math.PI * 2);
+                ctx.fill();
+            }
             
             // Сугробы
             snowdrifts.forEach(snowdrift => {
-                ctx.save();
-                ctx.translate(snowdrift.x + snowdrift.width/2, snowdrift.y + snowdrift.height/2);
-                ctx.rotate(snowdrift.rotation * 0.1);
-                
-                // Основной сугроб
-                const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, snowdrift.width/2);
-                gradient.addColorStop(0, '#FFFFFF');
-                gradient.addColorStop(1, '#E3F2FD');
-                ctx.fillStyle = gradient;
-                
-                ctx.beginPath();
-                ctx.ellipse(0, 0, snowdrift.width/2, snowdrift.height/2, 0, 0, Math.PI * 2);
-                ctx.fill();
-                
-                // Блеск на снегу
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-                ctx.beginPath();
-                ctx.ellipse(-snowdrift.width/4, -snowdrift.height/4, 10, 5, 0, 0, Math.PI * 2);
-                ctx.fill();
-                
-                // Знак вопроса
-                ctx.fillStyle = '#1565C0';
-                ctx.font = 'bold 24px Arial';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText('?', 0, 0);
-                
-                ctx.restore();
+                if (images.snowdrift) {
+                    ctx.save();
+                    ctx.translate(snowdrift.x + snowdrift.width/2, snowdrift.y + snowdrift.height/2);
+                    ctx.rotate(snowdrift.rotation * 0.1);
+                    
+                    // Рисуем изображение сугроба
+                    ctx.drawImage(
+                        images.snowdrift, 
+                        -snowdrift.width/2, 
+                        -snowdrift.height/2, 
+                        snowdrift.width, 
+                        snowdrift.height
+                    );
+                    
+                    // Знак вопроса поверх сугроба
+                    ctx.fillStyle = '#1565C0';
+                    ctx.font = 'bold 24px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('?', 0, 0);
+                    
+                    ctx.restore();
+                } else {
+                    // Запасной вариант: рисуем простой сугроб
+                    ctx.save();
+                    ctx.translate(snowdrift.x + snowdrift.width/2, snowdrift.y + snowdrift.height/2);
+                    ctx.rotate(snowdrift.rotation * 0.1);
+                    
+                    const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, snowdrift.width/2);
+                    gradient.addColorStop(0, '#FFFFFF');
+                    gradient.addColorStop(1, '#E3F2FD');
+                    ctx.fillStyle = gradient;
+                    
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, snowdrift.width/2, snowdrift.height/2, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    ctx.fillStyle = '#1565C0';
+                    ctx.font = 'bold 24px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('?', 0, 0);
+                    
+                    ctx.restore();
+                }
             });
             
             // Конфетти
@@ -1320,6 +1525,15 @@
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText(`${Math.round(progress * 100)}%`, canvas.width/2, 27);
+        }
+
+        // Определение направления игрока
+        let lastPlayerX = 0;
+        function getPlayerDirection() {
+            const direction = player.x > lastPlayerX ? 'right' : 
+                            player.x < lastPlayerX ? 'left' : 'right';
+            lastPlayerX = player.x;
+            return direction;
         }
 
         // Обновление UI
@@ -1383,12 +1597,14 @@
         // Управление игроком
         let touchStartX = 0;
         let isDragging = false;
+        let lastMoveTime = 0;
 
         canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
             const touch = e.touches[0];
             touchStartX = touch.clientX;
             isDragging = true;
+            lastMoveTime = Date.now();
         });
 
         canvas.addEventListener('touchmove', (e) => {
@@ -1404,6 +1620,7 @@
             
             // Ограничиваем движение по краям
             player.x = Math.max(0, Math.min(player.x, canvas.width - player.width));
+            lastMoveTime = Date.now();
         });
 
         canvas.addEventListener('touchend', () => {
@@ -1421,11 +1638,13 @@
                 case 'a':
                 case 'A':
                     player.x = Math.max(0, player.x - speed);
+                    lastMoveTime = Date.now();
                     break;
                 case 'ArrowRight':
                 case 'd':
                 case 'D':
                     player.x = Math.min(canvas.width - player.width, player.x + speed);
+                    lastMoveTime = Date.now();
                     break;
             }
         });
@@ -1442,9 +1661,10 @@
         // Обработка изменения размера окна
         window.addEventListener('resize', resizeCanvas);
 
-        // Запуск игры
+        // Запуск игры при загрузке страницы
         window.addEventListener('load', () => {
-            initGame();
+            // Начинаем загрузку изображений
+            loadImages();
             
             // Добавляем стили для буквенных кнопок при наведении
             document.querySelectorAll('.letter-btn').forEach(btn => {
@@ -1457,7 +1677,7 @@
             });
         });
 
-        // Добавляем звуковые эффекты (простая имитация)
+        // Простые звуковые эффекты
         function playSound(type) {
             // Это заглушка для звуковых эффектов
             // В реальной игре можно добавить настоящие звуки
@@ -1466,4 +1686,3 @@
     </script>
 </body>
 </html>
-```

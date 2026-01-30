@@ -429,7 +429,7 @@
 <body>
     <div id="loadingScreen">
         <div style="font-size: 48px; color: #FFD700; margin-bottom: 20px;">❄️ Словарный Сугроб ❄️</div>
-        <div class="loading-text" id="loadingText">Загрузка изображений...</div>
+        <div class="loading-text" id="loadingText">Загрузка...</div>
         <div class="loading-bar">
             <div id="loadingFill" class="loading-fill" style="width: 0%"></div>
         </div>
@@ -450,7 +450,7 @@
                 </div>
                 <div class="stat-row">
                     <span>Слова:</span>
-                    <span id="wordsCount" class="stat-value">0/50</span>
+                    <span id="wordsCount" class="stat-value">0/25</span>
                 </div>
                 <div class="stat-row">
                     <span>Уровень:</span>
@@ -476,6 +476,9 @@
             <div id="wordDisplay"></div>
             <div id="lettersContainer"></div>
             <div id="feedback"></div>
+            <div id="keyboardHint" style="text-align: center; margin-top: 15px; color: #aaa; font-size: 14px; display: none;">
+                Можно вводить буквы с клавиатуры
+            </div>
         </div>
         
         <div id="celebration">
@@ -489,55 +492,56 @@
 
     <script>
         // Слова для игры с пропущенными буквами
-        const WORDS_BY_LEVEL = {
-            1: [ // Уровень 1: Легкие слова
-                { word: "л.генда", missing: [1], correct: "е", hint: "рассказ о героическом прошлом" },
-                { word: "м.жор", missing: [1], correct: "а", hint: "богатый и стильный человек" },
-                { word: "м.тив", missing: [1], correct: "о", hint: "причина, побуждение к действию" },
-                { word: "м.нерал", missing: [1], correct: "и", hint: "природное неорганическое вещество" },
-                { word: "м.теж", missing: [1], correct: "я", hint: "восстание, бунт" },
-                { word: "л.б.ринт", missing: [1, 3], correct: "аи", hint: "запутанные ходы, лабиринт" },
-                { word: "м.ханизм", missing: [1], correct: "е", hint: "устройство, система" },
-                { word: "м.н.лит", missing: [1, 3], correct: "оо", hint: "единая каменная глыба" },
-                { word: "м.р.торий", missing: [1, 3], correct: "оа", hint: "временный запрет" },
-                { word: "л.леять", missing: [1], correct: "е", hint: "нежно заботиться" }
-            ],
-            2: [ // Уровень 2: Средней сложности
-                { word: "м.таф.ра", missing: [1, 5], correct: "ео", hint: "образное выражение" },
-                { word: "л.генд.рный", missing: [1, 6], correct: "еа", hint: "ставший легендой" },
-                { word: "м.ропр.ятие", missing: [1, 6], correct: "еи", hint: "организованное действие" },
-                { word: "м.нтал.тет", missing: [1, 6], correct: "еи", hint: "склад ума, мышления" },
-                { word: "м.нов.нный", missing: [1, 5], correct: "ге", hint: "очень быстрый, мгновенный" },
-                { word: "м.тер.ал", missing: [1, 5], correct: "ии", hint: "вещество, исходник" },
-                { word: "м.нер.льный", missing: [1, 5], correct: "иа", hint: "содержащий минералы" },
-                { word: "м.тив.ция", missing: [1, 5], correct: "оа", hint: "побуждение к действию" },
-                { word: "л.б.рал", missing: [1, 3], correct: "ие", hint: "сторонник свободы" },
-                { word: "м.ри.иан", missing: [1, 4], correct: "ед", hint: "линия долготы на глобусе" }
-            ],
-            3: [ // Уровень 3: Сложные слова
-                { word: "м.тер.ал.зм", missing: [1, 5, 7], correct: "иаи", hint: "философское направление" },
-                { word: "м.т.в.ровать", missing: [1, 3, 5], correct: "оои", hint: "побуждать к действию" },
-                { word: "м.нт.льность", missing: [1, 4], correct: "еа", hint: "склад мышления" },
-                { word: "м.таф.рический", missing: [1, 5], correct: "ео", hint: "образный, иносказательный" },
-                { word: "м.х.н.ческий", missing: [1, 3, 5], correct: "еаи", hint: "действующий как механизм" },
-                { word: "л.б.р.льный", missing: [1, 3, 5], correct: "иее", hint: "свободный, терпимый" },
-                { word: "м.тер.ал.зация", missing: [1, 5, 8], correct: "иаи", hint: "воплощение в материале" },
-                { word: "м.нов.нность", missing: [1, 5], correct: "ге", hint: "краткость времени" },
-                { word: "л.генд.рность", missing: [1, 6], correct: "еа", hint: "качество легендарности" },
-                { word: "м.н.л.тный", missing: [1, 3, 5], correct: "оои", hint: "составляющий единое целое" }
-            ]
-        };
+        const ALL_WORDS = [
+            // Л
+            { word: "л.б.ринт", missing: [1, 3], correct: "аи", hint: "запутанные ходы" },
+            { word: "л.генда", missing: [1], correct: "е", hint: "рассказ о героическом прошлом" },
+            { word: "л.гендарный", missing: [1], correct: "е", hint: "ставший легендой" },
+            { word: "л.леять", missing: [1], correct: "е", hint: "нежно заботиться" },
+            { word: "л.б.рал", missing: [1, 3], correct: "ие", hint: "сторонник свободы" },
+            { word: "л.б.ральный", missing: [1, 3], correct: "ие", hint: "свободный, терпимый" },
+            
+            // М
+            { word: "м.жор", missing: [1], correct: "а", hint: "богатый и стильный человек" },
+            { word: "м.жорный", missing: [1], correct: "а", hint: "роскошный, богатый" },
+            { word: "м.териал", missing: [1], correct: "а", hint: "вещество, исходник" },
+            { word: "м.териальный", missing: [1], correct: "а", hint: "вещественный, реальный" },
+            { word: "м.териализм", missing: [1], correct: "а", hint: "философское направление" },
+            { word: "м.териализовать", missing: [1], correct: "а", hint: "воплощать в жизнь" },
+            { word: "мгн.вение", missing: [3], correct: "о", hint: "очень короткий промежуток времени" },
+            { word: "мгн.венный", missing: [3], correct: "о", hint: "очень быстрый, мгновенный" },
+            { word: "м.нтал.тет", missing: [1, 6], correct: "еи", hint: "склад ума, мышления" },
+            { word: "м.нтальный", missing: [1], correct: "е", hint: "относящийся к уму" },
+            { word: "м.р.диан", missing: [1, 3], correct: "еа", hint: "линия долготы на глобусе" },
+            { word: "м.роприятие", missing: [1], correct: "е", hint: "организованное действие" },
+            { word: "м.тафора", missing: [1], correct: "е", hint: "образное выражение" },
+            { word: "м.тафорический", missing: [1], correct: "е", hint: "образный, иносказательный" },
+            { word: "м.ханизм", missing: [1], correct: "е", hint: "устройство, система" },
+            { word: "м.ханический", missing: [1], correct: "е", hint: "действующий как механизм" },
+            { word: "м.нерал", missing: [1], correct: "и", hint: "природное неорганическое вещество" },
+            { word: "м.неральный", missing: [1], correct: "и", hint: "содержащий минералы" },
+            { word: "м.нор", missing: [1], correct: "и", hint: "музыкальный лад" },
+            { word: "м.норный", missing: [1], correct: "и", hint: "грустный, печальный" },
+            { word: "м.н.лит", missing: [1, 3], correct: "оо", hint: "единая каменная глыба" },
+            { word: "м.н..литный", missing: [1, 3, 4], correct: "ооо", hint: "составляющий единое целое" },
+            { word: "м.р.торий", missing: [1, 3], correct: "оа", hint: "временный запрет" },
+            { word: "м.тив", missing: [1], correct: "о", hint: "причина, побуждение к действию" },
+            { word: "м.тивировать", missing: [1], correct: "о", hint: "побуждать к действию" },
+            { word: "м.тивация", missing: [1], correct: "о", hint: "побуждение к действию" },
+            { word: "м.теж", missing: [1], correct: "я", hint: "восстание, бунт" },
+            { word: "м.тежный", missing: [1], correct: "я", hint: "мятежный, бунтарский" }
+        ];
 
         const LEVEL_NAMES = {
             1: "Новичок",
-            2: "Знаток",
+            2: "Знаток", 
             3: "Эксперт"
         };
 
         const LEVEL_SETTINGS = {
-            1: { time: 15, speed: 1, scoreMultiplier: 1, snowdriftSpeed: 2 },
-            2: { time: 12, speed: 1.3, scoreMultiplier: 1.5, snowdriftSpeed: 2.5 },
-            3: { time: 10, speed: 1.6, scoreMultiplier: 2, snowdriftSpeed: 3 }
+            1: { time: 15, speed: 1, scoreMultiplier: 1, snowdriftSpeed: 2, wordsPerLevel: 25 },
+            2: { time: 12, speed: 1.3, scoreMultiplier: 1.5, snowdriftSpeed: 2.5, wordsPerLevel: 25 },
+            3: { time: 10, speed: 1.6, scoreMultiplier: 2, snowdriftSpeed: 3, wordsPerLevel: 25 }
         };
 
         // Игровые переменные
@@ -560,15 +564,17 @@
         let particles = [];
         let player = { x: 0, y: 0, width: 80, height: 120, direction: 'right' };
         let snowdrifts = [];
+        let snowPiles = []; // Кучи снега
         let animationId = null;
         let allWordsCompleted = false;
         let lastSnowdriftTime = 0;
         let snowdriftInterval = 2000;
         let confetti = [];
+        let usedWords = new Set(); // Для отслеживания использованных слов
+        let availableWords = [...ALL_WORDS]; // Копия всех слов для перемешивания
 
         // Загружаемые изображения
         const images = {
-            background: null,
             janitor_left: null,
             janitor_right: null,
             roof: null,
@@ -593,6 +599,7 @@
         const lettersContainer = document.getElementById('lettersContainer');
         const timerElement = document.getElementById('timer');
         const feedbackElement = document.getElementById('feedback');
+        const keyboardHint = document.getElementById('keyboardHint');
         const celebration = document.getElementById('celebration');
         const celebrationTitle = document.getElementById('celebrationTitle');
         const celebrationSubtext = document.getElementById('celebrationSubtext');
@@ -673,12 +680,15 @@
             score = 0;
             lives = 3;
             learnedWords.clear();
+            usedWords.clear();
+            availableWords = [...ALL_WORDS].sort(() => Math.random() - 0.5); // Перемешиваем слова
             currentWordIndex = 0;
             correctInRow = 0;
             combo = 0;
             allWordsCompleted = false;
             confetti = [];
             snowdrifts = [];
+            snowPiles = [];
             
             updateUI();
             updateProgress();
@@ -689,6 +699,16 @@
             gameLoop();
             
             setTimeout(() => createSnowdrift(), 1000);
+            
+            // Показываем подсказку про клавиатуру для ПК
+            if (!isMobile()) {
+                keyboardHint.style.display = 'block';
+            }
+        }
+
+        // Проверка мобильного устройства
+        function isMobile() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         }
 
         // Создание сугроба
@@ -698,8 +718,28 @@
             const now = Date.now();
             if (now - lastSnowdriftTime < snowdriftInterval) return;
             
-            const levelWords = WORDS_BY_LEVEL[Math.min(level, 3)];
-            const wordData = levelWords[currentWordIndex % levelWords.length];
+            // Проверяем, есть ли еще неиспользованные слова
+            if (usedWords.size >= LEVEL_SETTINGS[level].wordsPerLevel) {
+                return;
+            }
+            
+            // Получаем случайное слово из доступных
+            let wordData;
+            let attempts = 0;
+            
+            do {
+                wordData = availableWords[currentWordIndex % availableWords.length];
+                currentWordIndex++;
+                attempts++;
+                
+                if (attempts > availableWords.length * 2) {
+                    // Если все слова уже были использованы, сбрасываем usedWords
+                    usedWords.clear();
+                    break;
+                }
+            } while (usedWords.has(wordData.word));
+            
+            usedWords.add(wordData.word);
             
             const snowdrift = {
                 x: 100 + Math.random() * (canvas.width - 200),
@@ -711,12 +751,68 @@
                 collected: false,
                 onGround: false,
                 id: Date.now(),
-                rotation: 0
+                rotation: 0,
+                inSnowPile: false
             };
             
-            snowdrifts.push(snowdrift);
-            currentWordIndex++;
+            // Проверяем столкновение с другими сугробами
+            let collision = false;
+            for (const other of snowdrifts) {
+                if (checkSnowdriftCollision(snowdrift, other)) {
+                    collision = true;
+                    break;
+                }
+            }
+            
+            // Если есть столкновение, создаем кучу снега
+            if (collision) {
+                createSnowPile(snowdrift.x, snowdrift.y);
+            } else {
+                snowdrifts.push(snowdrift);
+            }
+            
             lastSnowdriftTime = now;
+        }
+
+        // Создание кучи снега
+        function createSnowPile(x, y) {
+            // Проверяем, есть ли уже куча снега рядом
+            let existingPile = null;
+            for (const pile of snowPiles) {
+                if (Math.abs(pile.x - x) < 150 && Math.abs(pile.y - y) < 100) {
+                    existingPile = pile;
+                    break;
+                }
+            }
+            
+            if (existingPile) {
+                // Увеличиваем существующую кучу
+                existingPile.width = Math.min(200, existingPile.width + 30);
+                existingPile.height = Math.min(140, existingPile.height + 20);
+                existingPile.wordCount++;
+            } else {
+                // Создаем новую кучу
+                snowPiles.push({
+                    x: x,
+                    y: canvas.height - 150, // На земле
+                    width: 150,
+                    height: 100,
+                    wordCount: 1,
+                    collected: false
+                });
+            }
+        }
+
+        // Проверка столкновения сугробов
+        function checkSnowdriftCollision(snowdrift1, snowdrift2) {
+            if (snowdrift2.onGround) {
+                const distance = Math.sqrt(
+                    Math.pow(snowdrift1.x - snowdrift2.x, 2) + 
+                    Math.pow(snowdrift1.y - snowdrift2.y, 2)
+                );
+                return distance < (snowdrift1.width/2 + snowdrift2.width/2);
+            }
+            return false;
         }
 
         // Инициализация снежинок
@@ -740,6 +836,7 @@
             
             updateSnowflakes();
             updateSnowdrifts();
+            updateSnowPiles();
             updateParticles();
             updateConfetti();
             
@@ -764,7 +861,9 @@
 
         // Обновление сугробов
         function updateSnowdrifts() {
-            snowdrifts.forEach(snowdrift => {
+            for (let i = snowdrifts.length - 1; i >= 0; i--) {
+                const snowdrift = snowdrifts[i];
+                
                 if (!snowdrift.onGround) {
                     snowdrift.y += snowdrift.speed;
                     snowdrift.rotation += 0.02;
@@ -773,6 +872,17 @@
                         snowdrift.y = canvas.height - 150;
                         snowdrift.onGround = true;
                         snowdrift.speed = 0;
+                        
+                        // Проверяем столкновение с другими сугробами при падении
+                        for (let j = 0; j < snowdrifts.length; j++) {
+                            if (i !== j && snowdrifts[j].onGround) {
+                                if (checkSnowdriftCollision(snowdrift, snowdrifts[j])) {
+                                    createSnowPile(snowdrift.x, snowdrift.y);
+                                    snowdrifts.splice(i, 1);
+                                    return;
+                                }
+                            }
+                        }
                     }
                     
                     if (checkCollision(player, snowdrift)) {
@@ -783,7 +893,21 @@
                         startWordGame(snowdrift);
                     }
                 }
-            });
+            }
+        }
+
+        // Обновление куч снега
+        function updateSnowPiles() {
+            for (let i = snowPiles.length - 1; i >= 0; i--) {
+                const pile = snowPiles[i];
+                
+                if (checkCollision(player, pile)) {
+                    // При столкновении с кучей снега берем случайное слово
+                    const randomWord = availableWords[Math.floor(Math.random() * availableWords.length)];
+                    startWordGame({ word: randomWord });
+                    snowPiles.splice(i, 1);
+                }
+            }
         }
 
         // Проверка столкновения
@@ -950,11 +1074,8 @@
                 createParticles('#FFD700', canvas.width/2, canvas.height/2);
                 createConfetti();
                 
-                const levelWords = WORDS_BY_LEVEL[Math.min(level, 3)];
-                const allWordsInLevel = levelWords.map(w => w.word);
-                const allLearned = allWordsInLevel.every(word => learnedWords.has(word));
-                
-                if (allLearned && !allWordsCompleted) {
+                // Проверяем, изучены ли все слова для текущего уровня
+                if (learnedWords.size >= LEVEL_SETTINGS[level].wordsPerLevel) {
                     allWordsCompleted = true;
                     setTimeout(() => showCelebration(true), 1000);
                 }
@@ -1038,22 +1159,22 @@
                 celebrationTitle.textContent = '🎉 ВСЕ СЛОВА ИЗУЧЕНЫ! 🎉';
                 celebrationSubtext.textContent = getRandomPraise();
                 
-                const levelWords = WORDS_BY_LEVEL[Math.min(level, 3)];
-                const accuracy = levelWords.length > 0 ? Math.round((learnedWords.size / levelWords.length) * 100) : 0;
-                
                 const statsHTML = `
                     <div style="text-align: center; margin: 30px 0; background: rgba(255,255,255,0.1); padding: 20px; border-radius: 15px; max-width: 500px;">
                         <div style="font-size: 24px; color: #FFD700; margin: 10px 0;">
                             Уровень "${LEVEL_NAMES[level]}" завершён!
                         </div>
                         <div style="font-size: 18px; color: #4CAF50; margin: 10px 0;">
-                            📚 Изучено слов: ${learnedWords.size}/${levelWords.length}
+                            📚 Изучено слов: ${learnedWords.size}/${LEVEL_SETTINGS[level].wordsPerLevel}
                         </div>
                         <div style="font-size: 18px; color: #2196F3; margin: 10px 0;">
-                            🎯 Точность: ${accuracy}%
+                            🎯 Точность: ${Math.round((learnedWords.size / usedWords.size) * 100)}%
                         </div>
                         <div style="font-size: 18px; color: #FF9800; margin: 10px 0;">
                             ⭐ Счёт: ${score}
+                        </div>
+                        <div style="font-size: 16px; color: #aaa; margin-top: 15px;">
+                            Следующий уровень: время на слово ${LEVEL_SETTINGS[level+1]?.time || LEVEL_SETTINGS[3].time} сек
                         </div>
                     </div>
                 `;
@@ -1073,19 +1194,16 @@
                 celebrationSubtext.textContent = 'Но не сдавайтесь! Попробуйте снова!';
                 nextLevelBtn.style.display = 'none';
                 
-                const levelWords = WORDS_BY_LEVEL[Math.min(level, 3)];
-                const accuracy = levelWords.length > 0 ? Math.round((learnedWords.size / levelWords.length) * 100) : 0;
-                
                 const statsHTML = `
                     <div style="text-align: center; margin: 30px 0; background: rgba(255,255,255,0.1); padding: 20px; border-radius: 15px; max-width: 500px;">
                         <div style="font-size: 24px; color: #FFD700; margin: 10px 0;">
                             Итоговый счёт: ${score}
                         </div>
                         <div style="font-size: 18px; color: #4CAF50; margin: 10px 0;">
-                            📚 Изучено слов: ${learnedWords.size}/${levelWords.length}
+                            📚 Изучено слов: ${learnedWords.size}
                         </div>
                         <div style="font-size: 18px; color: #2196F3; margin: 10px 0;">
-                            🎯 Точность: ${accuracy}%
+                            🎯 Точность: ${Math.round((learnedWords.size / usedWords.size) * 100)}%
                         </div>
                         <div style="font-size: 18px; color: #FF9800; margin: 10px 0;">
                             🏆 Уровень: ${LEVEL_NAMES[level]}
@@ -1118,10 +1236,12 @@
             level++;
             allWordsCompleted = false;
             learnedWords.clear();
+            usedWords.clear();
             currentWordIndex = 0;
             correctInRow = 0;
             combo = 0;
             snowdrifts = [];
+            snowPiles = [];
             
             celebration.style.display = 'none';
             gameState = 'playing';
@@ -1258,18 +1378,18 @@
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // Крыша на весь экран
+            // Крыша в два раза меньше, почти в самом низу
             if (images.roof) {
-                // Увеличиваем крышу в 4 раза от оригинального размера
-                const roofWidth = canvas.width * 1.5; // Увеличиваем ширину
-                const roofHeight = canvas.height * 0.8; // Увеличиваем высоту
+                // Уменьшаем крышу в 2 раза относительно предыдущей версии
+                const roofWidth = canvas.width * 0.75; // В два раза меньше
+                const roofHeight = canvas.height * 0.4; // В два раза меньше
                 const roofX = canvas.width/2 - roofWidth/2;
-                const roofY = -100; // Поднимаем крышу выше
+                const roofY = canvas.height * 0.6; // Почти в самом низу (60% от высоты)
                 ctx.drawImage(images.roof, roofX, roofY, roofWidth, roofHeight);
             } else {
                 // Запасной вариант
                 ctx.fillStyle = '#5D4037';
-                ctx.fillRect(-canvas.width/4, -100, canvas.width * 1.5, canvas.height * 0.8);
+                ctx.fillRect(canvas.width/4, canvas.height * 0.6, canvas.width * 0.5, canvas.height * 0.4);
             }
             
             // Снежинки
@@ -1297,7 +1417,7 @@
                 ctx.fillRect(player.x, player.y, player.width, player.height);
             }
             
-            // Сугробы (без вопросительных знаков)
+            // Сугробы
             snowdrifts.forEach(snowdrift => {
                 if (images.snowdrift) {
                     ctx.save();
@@ -1336,6 +1456,44 @@
                 }
             });
             
+            // Кучи снега
+            snowPiles.forEach(pile => {
+                ctx.save();
+                ctx.translate(pile.x + pile.width/2, pile.y + pile.height/2);
+                
+                // Градиент для кучи снега
+                const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, pile.width/2);
+                gradient.addColorStop(0, '#FFFFFF');
+                gradient.addColorStop(0.7, '#E3F2FD');
+                gradient.addColorStop(1, '#BBDEFB');
+                ctx.fillStyle = gradient;
+                
+                // Рисуем кучу снега
+                ctx.beginPath();
+                for (let i = 0; i < 5; i++) {
+                    const angle = (i * Math.PI * 2) / 5;
+                    const radius = pile.width/2;
+                    const x = Math.cos(angle) * radius;
+                    const y = Math.sin(angle) * radius * 0.7;
+                    if (i === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+                ctx.closePath();
+                ctx.fill();
+                
+                // Количество слов в куче
+                ctx.fillStyle = '#1565C0';
+                ctx.font = 'bold 20px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(pile.wordCount, 0, 0);
+                
+                ctx.restore();
+            });
+            
             // Конфетти
             confetti.forEach(c => {
                 ctx.save();
@@ -1362,8 +1520,7 @@
             scoreElement.textContent = score;
             livesElement.textContent = '❤️'.repeat(Math.max(0, lives));
             
-            const levelWords = WORDS_BY_LEVEL[Math.min(level, 3)];
-            wordsCountElement.textContent = `${learnedWords.size}/${levelWords.length}`;
+            wordsCountElement.textContent = `${learnedWords.size}/${LEVEL_SETTINGS[level].wordsPerLevel}`;
             levelElement.textContent = level;
             
             levelInfo.textContent = `Время: ${LEVEL_SETTINGS[level].time} сек | Сложность: ${LEVEL_NAMES[level]}`;
@@ -1375,8 +1532,8 @@
 
         // Обновление прогресса
         function updateProgress() {
-            const levelWords = WORDS_BY_LEVEL[Math.min(level, 3)];
-            const progress = levelWords.length > 0 ? (learnedWords.size / levelWords.length) * 100 : 0;
+            const progress = LEVEL_SETTINGS[level].wordsPerLevel > 0 ? 
+                (learnedWords.size / LEVEL_SETTINGS[level].wordsPerLevel) * 100 : 0;
             progressFill.style.width = `${progress}%`;
         }
 
@@ -1404,7 +1561,12 @@
                 return;
             }
             
-            learnedWords.forEach((wordData, key) => {
+            // Сортируем слова по алфавиту
+            const sortedWords = Array.from(learnedWords.entries()).sort((a, b) => 
+                a[1].word.localeCompare(b[1].word)
+            );
+            
+            sortedWords.forEach(([key, wordData]) => {
                 const wordElement = document.createElement('div');
                 wordElement.className = 'dictionary-word';
                 wordElement.innerHTML = `
@@ -1468,23 +1630,42 @@
 
         // Управление с клавиатуры
         document.addEventListener('keydown', (e) => {
-            if (gameState !== 'playing') return;
-            
-            const speed = 20;
-            
-            switch(e.key) {
-                case 'ArrowLeft':
-                case 'a':
-                case 'A':
-                    player.x = Math.max(0, player.x - speed);
-                    player.direction = 'left';
-                    break;
-                case 'ArrowRight':
-                case 'd':
-                case 'D':
-                    player.x = Math.min(canvas.width - player.width, player.x + speed);
-                    player.direction = 'right';
-                    break;
+            if (gameState === 'wordGame') {
+                // Ввод букв с клавиатуры в мини-игре
+                const key = e.key.toLowerCase();
+                const russianLetters = 'абвгдеёжзийклмнопрстуфхцчшщъыьэюя';
+                
+                if (russianLetters.includes(key)) {
+                    selectLetter(key);
+                    e.preventDefault();
+                } else if (e.key === 'Backspace') {
+                    // Удаление последней буквы
+                    if (currentMissingIndex > 0) {
+                        currentMissingIndex--;
+                        currentSelection[currentMissingIndex] = null;
+                        updateWordDisplay();
+                        createLetterButtons();
+                    }
+                    e.preventDefault();
+                }
+            } else if (gameState === 'playing') {
+                // Управление дворником
+                const speed = 20;
+                
+                switch(e.key) {
+                    case 'ArrowLeft':
+                    case 'a':
+                    case 'A':
+                        player.x = Math.max(0, player.x - speed);
+                        player.direction = 'left';
+                        break;
+                    case 'ArrowRight':
+                    case 'd':
+                    case 'D':
+                        player.x = Math.min(canvas.width - player.width, player.x + speed);
+                        player.direction = 'right';
+                        break;
+                }
             }
         });
 

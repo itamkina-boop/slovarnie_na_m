@@ -304,6 +304,34 @@
             z-index: 100;
         }
         
+        #dictionary {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 15px;
+            border: 2px solid #2196F3;
+            max-width: 300px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 100;
+        }
+        
+        .dictionary-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #2196F3;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .dictionary-word {
+            font-size: 14px;
+            margin: 5px 0;
+            color: #FFD700;
+        }
+        
         #loadingScreen {
             position: fixed;
             top: 0;
@@ -388,6 +416,13 @@
             .loading-bar {
                 width: 250px;
             }
+            
+            #dictionary {
+                bottom: 10px;
+                right: 10px;
+                max-width: 200px;
+                max-height: 150px;
+            }
         }
     </style>
 </head>
@@ -430,6 +465,11 @@
         </div>
         
         <div id="comboCounter">Комбо: 0</div>
+        
+        <div id="dictionary">
+            <div class="dictionary-title">📚 Словарик</div>
+            <div id="dictionaryWords"></div>
+        </div>
         
         <div id="wordPopup">
             <div id="timer">15</div>
@@ -485,47 +525,19 @@
                 { word: "м.нов.нность", missing: [1, 5], correct: "ге", hint: "краткость времени" },
                 { word: "л.генд.рность", missing: [1, 6], correct: "еа", hint: "качество легендарности" },
                 { word: "м.н.л.тный", missing: [1, 3, 5], correct: "оои", hint: "составляющий единое целое" }
-            ],
-            4: [ // Уровень 4: Очень сложные
-                { word: "д.з.нтеграция", missing: [1, 3], correct: "еи", hint: "распад на части" },
-                { word: "р.к.нструкция", missing: [1, 3], correct: "ео", hint: "восстановление" },
-                { word: "тр.нсф.рмация", missing: [1, 6], correct: "ао", hint: "преобразование" },
-                { word: "пр.п.рция", missing: [1, 3], correct: "оо", hint: "соразмерность" },
-                { word: "к.нс.рвация", missing: [1, 4], correct: "ое", hint: "сохранение" },
-                { word: "д.в.рс.фикация", missing: [1, 3, 6], correct: "иеи", hint: "разнообразие" },
-                { word: "р.ц.пр.кация", missing: [1, 3, 6], correct: "еио", hint: "взаимность" },
-                { word: "пр.ф.р.нция", missing: [1, 3, 6], correct: "еее", hint: "предпочтение" },
-                { word: "с.п.р.тивность", missing: [1, 3, 6], correct: "уее", hint: "способность противостоять" },
-                { word: "к.мп.т.нция", missing: [1, 3, 6], correct: "оее", hint: "область знаний" }
-            ],
-            5: [ // Уровень 5: Экспертный
-                { word: "к.нтр.пункт", missing: [1, 5], correct: "оа", hint: "многоголосие в музыке" },
-                { word: "м.тамп.рфоза", missing: [1, 5], correct: "ео", hint: "превращение" },
-                { word: "п.р.д.кс", missing: [1, 3, 5], correct: "аао", hint: "неожиданное явление" },
-                { word: "пр.ст.т.ция", missing: [1, 4, 6], correct: "оиу", hint: "представление о чем-либо" },
-                { word: "г.п.т.нуза", missing: [1, 3, 5], correct: "иое", hint: "полусонное состояние" },
-                { word: "м.тат.за", missing: [1, 4], correct: "еа", hint: "замещение звуков" },
-                { word: "п.р.ф.ра", missing: [1, 3, 5], correct: "аее", hint: "иносказание" },
-                { word: "с.н.кр.за", missing: [1, 3, 5], correct: "иио", hint: "совпадение во времени" },
-                { word: "тр.нс.ндентный", missing: [1, 5], correct: "аа", hint: "выходящий за пределы" },
-                { word: "ф.н.м.налогия", missing: [1, 3, 5], correct: "оее", hint: "учение о языковых единицах" }
             ]
         };
 
         const LEVEL_NAMES = {
             1: "Новичок",
             2: "Знаток",
-            3: "Эксперт",
-            4: "Мастер слов",
-            5: "Гений русского языка"
+            3: "Эксперт"
         };
 
         const LEVEL_SETTINGS = {
             1: { time: 15, speed: 1, scoreMultiplier: 1, snowdriftSpeed: 2 },
             2: { time: 12, speed: 1.3, scoreMultiplier: 1.5, snowdriftSpeed: 2.5 },
-            3: { time: 10, speed: 1.6, scoreMultiplier: 2, snowdriftSpeed: 3 },
-            4: { time: 8, speed: 2, scoreMultiplier: 3, snowdriftSpeed: 3.5 },
-            5: { time: 6, speed: 2.5, scoreMultiplier: 5, snowdriftSpeed: 4 }
+            3: { time: 10, speed: 1.6, scoreMultiplier: 2, snowdriftSpeed: 3 }
         };
 
         // Игровые переменные
@@ -536,7 +548,7 @@
         let lives = 3;
         let level = 1;
         let currentWordIndex = 0;
-        let learnedWords = new Set();
+        let learnedWords = new Map();
         let correctInRow = 0;
         let combo = 0;
         let currentWord = null;
@@ -546,7 +558,7 @@
         let timerInterval = null;
         let snowflakes = [];
         let particles = [];
-        let player = { x: 0, y: 0, width: 80, height: 120 };
+        let player = { x: 0, y: 0, width: 80, height: 120, direction: 'right' };
         let snowdrifts = [];
         let animationId = null;
         let allWordsCompleted = false;
@@ -575,6 +587,7 @@
         const progressFill = document.getElementById('progressFill');
         const levelInfo = document.getElementById('levelInfo');
         const levelBadge = document.getElementById('levelBadge');
+        const dictionaryWords = document.getElementById('dictionaryWords');
         const wordPopup = document.getElementById('wordPopup');
         const wordDisplay = document.getElementById('wordDisplay');
         const lettersContainer = document.getElementById('lettersContainer');
@@ -591,23 +604,21 @@
         // Загрузка изображений
         function loadImages() {
             const imageFiles = [
-                { key: 'background', src: 'winter_background.jpg', type: 'jpg' },
-                { key: 'janitor_left', src: 'janitor_left.png', type: 'png' },
-                { key: 'janitor_right', src: 'janitor_right.png', type: 'png' },
-                { key: 'roof', src: 'roof.png', type: 'png' },
-                { key: 'snowdrift', src: 'snowdrift.png', type: 'png' }
+                { key: 'janitor_left', src: 'janitor_left.png' },
+                { key: 'janitor_right', src: 'janitor_right.png' },
+                { key: 'roof', src: 'roof.png' },
+                { key: 'snowdrift', src: 'snowdrift.png' }
             ];
 
             let loadedCount = 0;
             const totalCount = imageFiles.length;
 
-            imageFiles.forEach((file, index) => {
+            imageFiles.forEach((file) => {
                 const img = new Image();
                 img.onload = () => {
                     images[file.key] = img;
                     loadedCount++;
                     
-                    // Обновляем прогресс загрузки
                     const progress = Math.round((loadedCount / totalCount) * 100);
                     loadingFill.style.width = `${progress}%`;
                     loadingText.textContent = `Загружено: ${loadedCount}/${totalCount} изображений`;
@@ -626,8 +637,6 @@
                 
                 img.onerror = () => {
                     console.warn(`Не удалось загрузить изображение: ${file.src}`);
-                    // Создаем заглушку
-                    createPlaceholder(file.key, file.type);
                     loadedCount++;
                     
                     const progress = Math.round((loadedCount / totalCount) * 100);
@@ -649,93 +658,18 @@
             });
         }
 
-        // Создание заглушки для изображения
-        function createPlaceholder(key, type) {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            
-            let width, height, color, text;
-            
-            switch(key) {
-                case 'background':
-                    width = 800;
-                    height = 600;
-                    color = '#1a237e';
-                    text = 'ФОН';
-                    break;
-                case 'janitor_left':
-                case 'janitor_right':
-                    width = 80;
-                    height = 120;
-                    color = '#FF6D00';
-                    text = key.includes('left') ? '←' : '→';
-                    break;
-                case 'roof':
-                    width = 300;
-                    height = 200;
-                    color = '#5D4037';
-                    text = 'КРЫША';
-                    break;
-                case 'snowdrift':
-                    width = 100;
-                    height = 70;
-                    color = '#FFFFFF';
-                    text = '❄️';
-                    break;
-                default:
-                    width = 100;
-                    height = 100;
-                    color = '#666';
-                    text = '?';
-            }
-            
-            canvas.width = width;
-            canvas.height = height;
-            
-            // Градиентный фон
-            const gradient = ctx.createLinearGradient(0, 0, width, height);
-            gradient.addColorStop(0, color);
-            gradient.addColorStop(1, darkenColor(color, 0.3));
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, width, height);
-            
-            // Текст
-            ctx.fillStyle = 'white';
-            ctx.font = 'bold 20px Arial';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(text, width/2, height/2);
-            
-            // Рамка
-            ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(2, 2, width-4, height-4);
-            
-            const img = new Image();
-            img.src = canvas.toDataURL();
-            images[key] = img;
-        }
-
-        function darkenColor(color, factor) {
-            // Простая функция для затемнения цвета
-            return color; // Упрощённая версия
-        }
-
         // Инициализация игры
         function initGame() {
             gameState = 'playing';
             
-            // Настройка canvas
             resizeCanvas();
             
-            // Позиция игрока
             player.x = canvas.width / 2 - player.width / 2;
             player.y = canvas.height - 150;
+            player.direction = 'right';
             
-            // Инициализация снежинок
             initSnowflakes();
             
-            // Сброс переменных
             score = 0;
             lives = 3;
             learnedWords.clear();
@@ -744,27 +678,27 @@
             combo = 0;
             allWordsCompleted = false;
             confetti = [];
+            snowdrifts = [];
             
             updateUI();
             updateProgress();
             updateCombo();
+            updateDictionary();
             
-            // Начало игрового цикла
             if (animationId) cancelAnimationFrame(animationId);
             gameLoop();
             
-            // Первый сугроб через 1 секунду
             setTimeout(() => createSnowdrift(), 1000);
         }
 
         // Создание сугроба
         function createSnowdrift() {
-            if (gameState !== 'playing' || snowdrifts.length > 4) return;
+            if (gameState !== 'playing') return;
             
             const now = Date.now();
             if (now - lastSnowdriftTime < snowdriftInterval) return;
             
-            const levelWords = WORDS_BY_LEVEL[Math.min(level, 5)];
+            const levelWords = WORDS_BY_LEVEL[Math.min(level, 3)];
             const wordData = levelWords[currentWordIndex % levelWords.length];
             
             const snowdrift = {
@@ -775,6 +709,7 @@
                 word: wordData,
                 speed: LEVEL_SETTINGS[level].snowdriftSpeed,
                 collected: false,
+                onGround: false,
                 id: Date.now(),
                 rotation: 0
             };
@@ -787,7 +722,7 @@
         // Инициализация снежинок
         function initSnowflakes() {
             snowflakes = [];
-            for (let i = 0; i < 150; i++) {
+            for (let i = 0; i < 100; i++) {
                 snowflakes.push({
                     x: Math.random() * canvas.width,
                     y: Math.random() * canvas.height,
@@ -803,19 +738,11 @@
         function updateGame() {
             if (gameState !== 'playing') return;
             
-            // Обновление снежинок
             updateSnowflakes();
-            
-            // Обновление сугробов
             updateSnowdrifts();
-            
-            // Обновление частиц
             updateParticles();
-            
-            // Обновление конфетти
             updateConfetti();
             
-            // Создание новых сугробов
             const now = Date.now();
             if (now - lastSnowdriftTime > snowdriftInterval) {
                 createSnowdrift();
@@ -837,28 +764,26 @@
 
         // Обновление сугробов
         function updateSnowdrifts() {
-            for (let i = snowdrifts.length - 1; i >= 0; i--) {
-                const snowdrift = snowdrifts[i];
-                
-                if (!snowdrift.collected) {
+            snowdrifts.forEach(snowdrift => {
+                if (!snowdrift.onGround) {
                     snowdrift.y += snowdrift.speed;
                     snowdrift.rotation += 0.02;
                     
-                    // Проверка столкновения с игроком
-                    if (checkCollision(player, snowdrift)) {
-                        startWordGame(snowdrift);
-                        snowdrift.collected = true;
+                    if (snowdrift.y > canvas.height - 150) {
+                        snowdrift.y = canvas.height - 150;
+                        snowdrift.onGround = true;
+                        snowdrift.speed = 0;
                     }
                     
-                    // Если упал за экран
-                    if (snowdrift.y > canvas.height) {
-                        snowdrifts.splice(i, 1);
-                        loseLife();
-                        combo = 0;
-                        updateCombo();
+                    if (checkCollision(player, snowdrift)) {
+                        startWordGame(snowdrift);
+                    }
+                } else {
+                    if (checkCollision(player, snowdrift)) {
+                        startWordGame(snowdrift);
                     }
                 }
-            }
+            });
         }
 
         // Проверка столкновения
@@ -876,13 +801,9 @@
             currentSelection = new Array(currentWord.correct.length).fill(null);
             currentMissingIndex = 0;
             
-            // Устанавливаем таймер для уровня
             timer = LEVEL_SETTINGS[level].time;
             
-            // Показываем попап
             showWordPopup();
-            
-            // Запускаем таймер
             startTimer();
         }
 
@@ -934,20 +855,15 @@
         function createLetterButtons() {
             lettersContainer.innerHTML = '';
             
-            // Все русские гласные
             const vowels = ['а', 'е', 'ё', 'и', 'о', 'у', 'ы', 'э', 'ю', 'я'];
-            
-            // Перемешиваем буквы
             const shuffled = [...vowels].sort(() => Math.random() - 0.5);
             
-            // Создаем кнопки
             shuffled.forEach(letter => {
                 const button = document.createElement('div');
                 button.className = 'letter-btn';
                 button.textContent = letter.toUpperCase();
                 button.dataset.letter = letter;
                 
-                // Проверяем, не выбрана ли уже эта буква для текущего пропуска
                 const isSelected = currentSelection[currentMissingIndex] === letter;
                 
                 if (isSelected) {
@@ -971,7 +887,6 @@
             currentSelection[currentMissingIndex] = letter;
             updateWordDisplay();
             
-            // Проверяем правильность
             const correctLetter = currentWord.correct[currentMissingIndex];
             const isCorrect = letter === correctLetter;
             
@@ -983,7 +898,6 @@
                 
                 currentMissingIndex++;
                 
-                // Если все буквы заполнены
                 if (currentMissingIndex >= currentWord.correct.length) {
                     completeWord(true);
                     return;
@@ -998,14 +912,12 @@
                 
                 currentMissingIndex++;
                 
-                // Если все буквы заполнены (с ошибками)
                 if (currentMissingIndex >= currentWord.correct.length) {
                     completeWord(false);
                     return;
                 }
             }
             
-            // Обновляем кнопки для следующего пропуска
             createLetterButtons();
         }
 
@@ -1014,12 +926,11 @@
             clearInterval(timerInterval);
             
             const wordKey = currentWord.word;
+            const fullWord = getFullWord(currentWord);
             
             if (isCorrect) {
-                // Базовые очки
                 let wordScore = 100 * LEVEL_SETTINGS[level].scoreMultiplier;
                 
-                // Бонус за комбо
                 if (combo > 0) {
                     wordScore += combo * 25;
                 }
@@ -1027,12 +938,19 @@
                 score += wordScore;
                 correctInRow++;
                 combo++;
-                learnedWords.add(wordKey);
+                
+                if (!learnedWords.has(wordKey)) {
+                    learnedWords.set(wordKey, {
+                        word: fullWord,
+                        hint: currentWord.hint
+                    });
+                    updateDictionary();
+                }
+                
                 createParticles('#FFD700', canvas.width/2, canvas.height/2);
                 createConfetti();
                 
-                // Проверяем, изучены ли все слова
-                const levelWords = WORDS_BY_LEVEL[Math.min(level, 5)];
+                const levelWords = WORDS_BY_LEVEL[Math.min(level, 3)];
                 const allWordsInLevel = levelWords.map(w => w.word);
                 const allLearned = allWordsInLevel.every(word => learnedWords.has(word));
                 
@@ -1044,26 +962,43 @@
                 correctInRow = 0;
                 combo = 0;
                 createParticles('#FF5252', canvas.width/2, canvas.height/2);
-                loseLife();
             }
             
             updateUI();
             updateProgress();
             updateCombo();
             
-            // Скрываем попап через 1 секунду
             setTimeout(() => {
                 hideWordPopup();
                 gameState = 'playing';
                 
-                // Удаляем сугроб
-                const index = snowdrifts.findIndex(s => s.word === currentWord);
-                if (index > -1) {
-                    snowdrifts.splice(index, 1);
+                // Удаляем сугроб только если слово угадано правильно
+                if (isCorrect) {
+                    const index = snowdrifts.findIndex(s => s.word === currentWord);
+                    if (index > -1) {
+                        snowdrifts.splice(index, 1);
+                    }
                 }
                 
                 currentWord = null;
             }, 1000);
+        }
+
+        // Получение полного слова
+        function getFullWord(wordData) {
+            let result = '';
+            let missingIndex = 0;
+            
+            for (let i = 0; i < wordData.word.length; i++) {
+                if (wordData.missing.includes(i)) {
+                    result += wordData.correct[missingIndex];
+                    missingIndex++;
+                } else {
+                    result += wordData.word[i];
+                }
+            }
+            
+            return result;
         }
 
         // Таймер
@@ -1097,31 +1032,13 @@
             }
         }
 
-        // Потеря жизни
-        function loseLife() {
-            lives--;
-            
-            if (lives <= 0) {
-                gameOver();
-            }
-            
-            updateUI();
-            createParticles('#FF5252', player.x + player.width/2, player.y + player.height/2);
-        }
-
-        // Конец игры
-        function gameOver() {
-            gameState = 'gameOver';
-            showCelebration(false);
-        }
-
         // Показ экрана поздравления
         function showCelebration(isVictory) {
             if (isVictory) {
                 celebrationTitle.textContent = '🎉 ВСЕ СЛОВА ИЗУЧЕНЫ! 🎉';
                 celebrationSubtext.textContent = getRandomPraise();
                 
-                const levelWords = WORDS_BY_LEVEL[Math.min(level, 5)];
+                const levelWords = WORDS_BY_LEVEL[Math.min(level, 3)];
                 const accuracy = levelWords.length > 0 ? Math.round((learnedWords.size / levelWords.length) * 100) : 0;
                 
                 const statsHTML = `
@@ -1138,16 +1055,12 @@
                         <div style="font-size: 18px; color: #FF9800; margin: 10px 0;">
                             ⭐ Счёт: ${score}
                         </div>
-                        <div style="font-size: 16px; color: #aaa; margin-top: 15px;">
-                            Следующий уровень: время на слово ${LEVEL_SETTINGS[level+1]?.time || LEVEL_SETTINGS[5].time} сек
-                        </div>
                     </div>
                 `;
                 
                 celebrationStats.innerHTML = statsHTML;
                 
-                // Показываем кнопку следующего уровня, если есть куда повышаться
-                if (level < 5) {
+                if (level < 3) {
                     nextLevelBtn.style.display = 'block';
                     nextLevelBtn.textContent = `🚀 УРОВЕНЬ ${level+1}: ${LEVEL_NAMES[level+1].toUpperCase()}`;
                 } else {
@@ -1160,7 +1073,7 @@
                 celebrationSubtext.textContent = 'Но не сдавайтесь! Попробуйте снова!';
                 nextLevelBtn.style.display = 'none';
                 
-                const levelWords = WORDS_BY_LEVEL[Math.min(level, 5)];
+                const levelWords = WORDS_BY_LEVEL[Math.min(level, 3)];
                 const accuracy = levelWords.length > 0 ? Math.round((learnedWords.size / levelWords.length) * 100) : 0;
                 
                 const statsHTML = `
@@ -1176,9 +1089,6 @@
                         </div>
                         <div style="font-size: 18px; color: #FF9800; margin: 10px 0;">
                             🏆 Уровень: ${LEVEL_NAMES[level]}
-                        </div>
-                        <div style="font-size: 16px; color: #FF5252; margin-top: 15px;">
-                            Максимальное комбо: ${combo} слов подряд
                         </div>
                     </div>
                 `;
@@ -1197,12 +1107,7 @@
                 'Потрясающе! Вы настоящий знаток русского языка!',
                 'Великолепно! Каждое слово — как родное!',
                 'Фантастика! Вы справились идеально!',
-                'Изумительно! Русский язык — ваша стихия!',
-                'Браво! Такой результат достоин аплодисментов!',
-                'Превосходно! Вы — грамматический гений!',
-                'Восхитительно! Слова покоряются вам с лёгкостью!',
-                'Идеально! Русский язык может гордиться вами!',
-                'Грандиозно! Вы только что покорили вершину грамотности!'
+                'Изумительно! Русский язык — ваша стихия!'
             ];
             
             return praises[Math.floor(Math.random() * praises.length)];
@@ -1216,6 +1121,7 @@
             currentWordIndex = 0;
             correctInRow = 0;
             combo = 0;
+            snowdrifts = [];
             
             celebration.style.display = 'none';
             gameState = 'playing';
@@ -1223,26 +1129,21 @@
             updateUI();
             updateProgress();
             updateCombo();
+            updateDictionary();
             
-            // Эффект перехода уровня
             createLevelTransition();
             
-            // Очищаем сугробы
-            snowdrifts = [];
-            
-            // Первый сугроб через 1 секунду
             setTimeout(() => createSnowdrift(), 1000);
         }
 
         // Эффект перехода уровня
         function createLevelTransition() {
-            for (let i = 0; i < 100; i++) {
+            for (let i = 0; i < 50; i++) {
                 setTimeout(() => {
                     createParticles('#FFD700', canvas.width/2, canvas.height/2);
                 }, i * 20);
             }
             
-            // Анимация текста
             levelBadge.style.animation = 'none';
             setTimeout(() => {
                 levelBadge.style.animation = 'pulse 2s infinite';
@@ -1251,15 +1152,15 @@
 
         // Создание частиц
         function createParticles(color, x, y) {
-            for (let i = 0; i < 20; i++) {
+            for (let i = 0; i < 15; i++) {
                 particles.push({
                     x: x || canvas.width/2,
                     y: y || canvas.height/2,
-                    vx: (Math.random() - 0.5) * 10,
-                    vy: (Math.random() - 0.5) * 10 - 5,
+                    vx: (Math.random() - 0.5) * 8,
+                    vy: (Math.random() - 0.5) * 8 - 4,
                     life: 1,
                     color: color,
-                    size: Math.random() * 4 + 2
+                    size: Math.random() * 3 + 2
                 });
             }
         }
@@ -1267,16 +1168,16 @@
         // Создание конфетти
         function createConfetti() {
             const colors = ['#FF4081', '#4CAF50', '#2196F3', '#FF9800', '#9C27B0', '#FFD700'];
-            for (let i = 0; i < 30; i++) {
+            for (let i = 0; i < 20; i++) {
                 confetti.push({
                     x: Math.random() * canvas.width,
                     y: -20,
-                    width: Math.random() * 10 + 5,
-                    height: Math.random() * 10 + 5,
+                    width: Math.random() * 8 + 4,
+                    height: Math.random() * 8 + 4,
                     color: colors[Math.floor(Math.random() * colors.length)],
-                    speed: Math.random() * 5 + 3,
+                    speed: Math.random() * 4 + 2,
                     rotation: Math.random() * 360,
-                    rotationSpeed: (Math.random() - 0.5) * 10
+                    rotationSpeed: (Math.random() - 0.5) * 8
                 });
             }
         }
@@ -1284,19 +1185,19 @@
         // Массивное конфетти для победы
         function createMassiveConfetti() {
             const colors = ['#FF4081', '#4CAF50', '#2196F3', '#FF9800', '#9C27B0', '#FFD700'];
-            for (let i = 0; i < 200; i++) {
+            for (let i = 0; i < 150; i++) {
                 setTimeout(() => {
                     confetti.push({
                         x: Math.random() * canvas.width,
                         y: -20,
-                        width: Math.random() * 15 + 5,
-                        height: Math.random() * 15 + 5,
+                        width: Math.random() * 12 + 4,
+                        height: Math.random() * 12 + 4,
                         color: colors[Math.floor(Math.random() * colors.length)],
-                        speed: Math.random() * 7 + 3,
+                        speed: Math.random() * 6 + 3,
                         rotation: Math.random() * 360,
-                        rotationSpeed: (Math.random() - 0.5) * 15
+                        rotationSpeed: (Math.random() - 0.5) * 12
                     });
-                }, i * 20);
+                }, i * 15);
             }
         }
 
@@ -1345,23 +1246,30 @@
             }, 2000);
         }
 
-        // Отрисовка игры с использованием ваших изображений
+        // Отрисовка игры
         function drawGame() {
-            // Очистка canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // Рисуем фон
-            if (images.background) {
-                // Масштабируем фон под размер canvas
-                ctx.drawImage(images.background, 0, 0, canvas.width, canvas.height);
+            // Градиентный фон
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#1a237e');
+            gradient.addColorStop(0.5, '#283593');
+            gradient.addColorStop(1, '#3949ab');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Крыша на весь экран
+            if (images.roof) {
+                // Увеличиваем крышу в 4 раза от оригинального размера
+                const roofWidth = canvas.width * 1.5; // Увеличиваем ширину
+                const roofHeight = canvas.height * 0.8; // Увеличиваем высоту
+                const roofX = canvas.width/2 - roofWidth/2;
+                const roofY = -100; // Поднимаем крышу выше
+                ctx.drawImage(images.roof, roofX, roofY, roofWidth, roofHeight);
             } else {
-                // Градиентный фон (запасной вариант)
-                const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-                gradient.addColorStop(0, '#1a237e');
-                gradient.addColorStop(0.5, '#283593');
-                gradient.addColorStop(1, '#3949ab');
-                ctx.fillStyle = gradient;
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                // Запасной вариант
+                ctx.fillStyle = '#5D4037';
+                ctx.fillRect(-canvas.width/4, -100, canvas.width * 1.5, canvas.height * 0.8);
             }
             
             // Снежинки
@@ -1378,61 +1286,26 @@
             ctx.fillStyle = '#E3F2FD';
             ctx.fillRect(0, canvas.height - 50, canvas.width, 50);
             
-            // Крыша (дом)
-            if (images.roof) {
-                // Рисуем крышу в центре вверху
-                const roofWidth = Math.min(300, canvas.width * 0.4);
-                const roofHeight = roofWidth * 0.67; // Сохраняем пропорции
-                const roofX = canvas.width/2 - roofWidth/2;
-                const roofY = 50;
-                ctx.drawImage(images.roof, roofX, roofY, roofWidth, roofHeight);
-            } else {
-                // Запасной вариант: рисуем простой дом
-                ctx.fillStyle = '#5D4037';
-                ctx.fillRect(canvas.width/2 - 150, 50, 300, 200);
-                
-                ctx.fillStyle = '#3E2723';
-                ctx.beginPath();
-                ctx.moveTo(canvas.width/2 - 150, 50);
-                ctx.lineTo(canvas.width/2, 0);
-                ctx.lineTo(canvas.width/2 + 150, 50);
-                ctx.closePath();
-                ctx.fill();
-            }
-            
             // Игрок (дворник)
-            let playerImage = images.janitor_front || images.janitor_right;
+            let playerImage = player.direction === 'left' ? images.janitor_left : images.janitor_right;
             if (playerImage) {
-                // Определяем направление игрока по движению
-                const playerDirection = getPlayerDirection();
-                if (playerDirection === 'left' && images.janitor_left) {
-                    playerImage = images.janitor_left;
-                } else if (playerDirection === 'right' && images.janitor_right) {
-                    playerImage = images.janitor_right;
-                }
-                
-                // Рисуем игрока с анимацией ходьбы
                 const walkOffset = Math.sin(Date.now() * 0.005) * 3;
                 ctx.drawImage(playerImage, player.x, player.y + walkOffset, player.width, player.height);
             } else {
-                // Запасной вариант: рисуем простого игрока
-                ctx.fillStyle = '#FF6D00';
+                // Запасной вариант
+                ctx.fillStyle = player.direction === 'left' ? '#FF5722' : '#FF9800';
                 ctx.fillRect(player.x, player.y, player.width, player.height);
-                
-                ctx.fillStyle = '#FFAB40';
-                ctx.beginPath();
-                ctx.arc(player.x + player.width/2, player.y - 10, 25, 0, Math.PI * 2);
-                ctx.fill();
             }
             
-            // Сугробы
+            // Сугробы (без вопросительных знаков)
             snowdrifts.forEach(snowdrift => {
                 if (images.snowdrift) {
                     ctx.save();
                     ctx.translate(snowdrift.x + snowdrift.width/2, snowdrift.y + snowdrift.height/2);
-                    ctx.rotate(snowdrift.rotation * 0.1);
+                    if (!snowdrift.onGround) {
+                        ctx.rotate(snowdrift.rotation * 0.1);
+                    }
                     
-                    // Рисуем изображение сугроба
                     ctx.drawImage(
                         images.snowdrift, 
                         -snowdrift.width/2, 
@@ -1441,19 +1314,14 @@
                         snowdrift.height
                     );
                     
-                    // Знак вопроса поверх сугроба
-                    ctx.fillStyle = '#1565C0';
-                    ctx.font = 'bold 24px Arial';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillText('?', 0, 0);
-                    
                     ctx.restore();
                 } else {
-                    // Запасной вариант: рисуем простой сугроб
+                    // Запасной вариант
                     ctx.save();
                     ctx.translate(snowdrift.x + snowdrift.width/2, snowdrift.y + snowdrift.height/2);
-                    ctx.rotate(snowdrift.rotation * 0.1);
+                    if (!snowdrift.onGround) {
+                        ctx.rotate(snowdrift.rotation * 0.1);
+                    }
                     
                     const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, snowdrift.width/2);
                     gradient.addColorStop(0, '#FFFFFF');
@@ -1463,12 +1331,6 @@
                     ctx.beginPath();
                     ctx.ellipse(0, 0, snowdrift.width/2, snowdrift.height/2, 0, 0, Math.PI * 2);
                     ctx.fill();
-                    
-                    ctx.fillStyle = '#1565C0';
-                    ctx.font = 'bold 24px Arial';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillText('?', 0, 0);
                     
                     ctx.restore();
                 }
@@ -1493,44 +1355,6 @@
                 ctx.fill();
             });
             ctx.globalAlpha = 1;
-            
-            // Прогресс-бар в игре
-            const levelWords = WORDS_BY_LEVEL[Math.min(level, 5)];
-            const progress = levelWords.length > 0 ? (learnedWords.size / levelWords.length) : 0;
-            
-            // Фон прогресс-бара
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-            ctx.fillRect(canvas.width/2 - 150, 20, 300, 15);
-            
-            // Заполненная часть
-            const progressGradient = ctx.createLinearGradient(canvas.width/2 - 150, 0, canvas.width/2 + 150, 0);
-            progressGradient.addColorStop(0, '#4CAF50');
-            progressGradient.addColorStop(progress, '#FFD700');
-            progressGradient.addColorStop(1, '#FFD700');
-            
-            ctx.fillStyle = progressGradient;
-            ctx.fillRect(canvas.width/2 - 150, 20, 300 * progress, 15);
-            
-            // Рамка прогресс-бара
-            ctx.strokeStyle = 'white';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(canvas.width/2 - 150, 20, 300, 15);
-            
-            // Текст прогресса
-            ctx.fillStyle = 'white';
-            ctx.font = 'bold 16px Arial';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(`${Math.round(progress * 100)}%`, canvas.width/2, 27);
-        }
-
-        // Определение направления игрока
-        let lastPlayerX = 0;
-        function getPlayerDirection() {
-            const direction = player.x > lastPlayerX ? 'right' : 
-                            player.x < lastPlayerX ? 'left' : 'right';
-            lastPlayerX = player.x;
-            return direction;
         }
 
         // Обновление UI
@@ -1538,22 +1362,20 @@
             scoreElement.textContent = score;
             livesElement.textContent = '❤️'.repeat(Math.max(0, lives));
             
-            const levelWords = WORDS_BY_LEVEL[Math.min(level, 5)];
+            const levelWords = WORDS_BY_LEVEL[Math.min(level, 3)];
             wordsCountElement.textContent = `${learnedWords.size}/${levelWords.length}`;
             levelElement.textContent = level;
             
-            // Обновляем информацию об уровне
             levelInfo.textContent = `Время: ${LEVEL_SETTINGS[level].time} сек | Сложность: ${LEVEL_NAMES[level]}`;
             levelBadge.textContent = LEVEL_NAMES[level];
             
-            // Цвет уровня
-            const colors = ['#4CAF50', '#2196F3', '#FF9800', '#9C27B0', '#FF4081'];
+            const colors = ['#4CAF50', '#2196F3', '#FF9800'];
             levelBadge.style.background = `linear-gradient(45deg, ${colors[level-1]}, ${colors[level % colors.length]})`;
         }
 
         // Обновление прогресса
         function updateProgress() {
-            const levelWords = WORDS_BY_LEVEL[Math.min(level, 5)];
+            const levelWords = WORDS_BY_LEVEL[Math.min(level, 3)];
             const progress = levelWords.length > 0 ? (learnedWords.size / levelWords.length) * 100 : 0;
             progressFill.style.width = `${progress}%`;
         }
@@ -1564,7 +1386,6 @@
                 comboCounter.textContent = `Комбо: ${combo} × ${25 * combo} бонус`;
                 comboCounter.style.display = 'block';
                 
-                // Анимация комбо
                 comboCounter.style.animation = 'none';
                 setTimeout(() => {
                     comboCounter.style.animation = 'pulse 0.5s';
@@ -1572,6 +1393,26 @@
             } else {
                 comboCounter.style.display = 'none';
             }
+        }
+
+        // Обновление словарика
+        function updateDictionary() {
+            dictionaryWords.innerHTML = '';
+            
+            if (learnedWords.size === 0) {
+                dictionaryWords.innerHTML = '<div style="color: #aaa; font-style: italic;">Изученных слов пока нет</div>';
+                return;
+            }
+            
+            learnedWords.forEach((wordData, key) => {
+                const wordElement = document.createElement('div');
+                wordElement.className = 'dictionary-word';
+                wordElement.innerHTML = `
+                    <strong>${wordData.word}</strong><br>
+                    <small style="color: #aaa;">${wordData.hint}</small>
+                `;
+                dictionaryWords.appendChild(wordElement);
+            });
         }
 
         // Игровой цикл
@@ -1586,7 +1427,6 @@
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
             
-            // Пересчитываем позицию игрока
             player.x = canvas.width / 2 - player.width / 2;
             player.y = canvas.height - 150;
         }
@@ -1594,14 +1434,12 @@
         // Управление игроком
         let touchStartX = 0;
         let isDragging = false;
-        let lastMoveTime = 0;
 
         canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
             const touch = e.touches[0];
             touchStartX = touch.clientX;
             isDragging = true;
-            lastMoveTime = Date.now();
         });
 
         canvas.addEventListener('touchmove', (e) => {
@@ -1612,12 +1450,16 @@
             const deltaX = touch.clientX - touchStartX;
             touchStartX = touch.clientX;
             
-            // Двигаем игрока
             player.x += deltaX * 1.5;
             
-            // Ограничиваем движение по краям
+            // Обновляем направление игрока
+            if (deltaX > 0) {
+                player.direction = 'right';
+            } else if (deltaX < 0) {
+                player.direction = 'left';
+            }
+            
             player.x = Math.max(0, Math.min(player.x, canvas.width - player.width));
-            lastMoveTime = Date.now();
         });
 
         canvas.addEventListener('touchend', () => {
@@ -1635,13 +1477,13 @@
                 case 'a':
                 case 'A':
                     player.x = Math.max(0, player.x - speed);
-                    lastMoveTime = Date.now();
+                    player.direction = 'left';
                     break;
                 case 'ArrowRight':
                 case 'd':
                 case 'D':
                     player.x = Math.min(canvas.width - player.width, player.x + speed);
-                    lastMoveTime = Date.now();
+                    player.direction = 'right';
                     break;
             }
         });
@@ -1660,26 +1502,8 @@
 
         // Запуск игры при загрузке страницы
         window.addEventListener('load', () => {
-            // Начинаем загрузку изображений
             loadImages();
-            
-            // Добавляем стили для буквенных кнопок при наведении
-            document.querySelectorAll('.letter-btn').forEach(btn => {
-                btn.addEventListener('mouseenter', function() {
-                    this.style.transform = 'scale(1.1)';
-                });
-                btn.addEventListener('mouseleave', function() {
-                    this.style.transform = 'scale(1)';
-                });
-            });
         });
-
-        // Простые звуковые эффекты
-        function playSound(type) {
-            // Это заглушка для звуковых эффектов
-            // В реальной игре можно добавить настоящие звуки
-            console.log(`Play sound: ${type}`);
-        }
     </script>
 </body>
 </html>

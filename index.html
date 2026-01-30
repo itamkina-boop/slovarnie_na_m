@@ -31,7 +31,6 @@
         
         canvas {
             display: block;
-            background: linear-gradient(to bottom, #1a237e 0%, #283593 30%, #3949ab 70%, #5c6bc0 100%);
         }
         
         #ui {
@@ -565,10 +564,11 @@
         let confetti = [];
         let availableWords = [...ALL_WORDS];
         let currentSnowdriftId = null;
-        let explodingSnowdrifts = []; // Для анимации разлетающихся сугробов
+        let explodingSnowdrifts = [];
 
         // Загружаемые изображения
         const images = {
+            background: null,
             janitor_left: null,
             janitor_right: null,
             roof: null,
@@ -604,6 +604,7 @@
         // Загрузка изображений
         function loadImages() {
             const imageFiles = [
+                { key: 'background', src: 'winter_background.png' },
                 { key: 'janitor_left', src: 'janitor_left.png' },
                 { key: 'janitor_right', src: 'janitor_right.png' },
                 { key: 'roof', src: 'roof.png' },
@@ -1368,13 +1369,19 @@
         function drawGame() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // Градиентный фон
-            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-            gradient.addColorStop(0, '#1a237e');
-            gradient.addColorStop(0.5, '#283593');
-            gradient.addColorStop(1, '#3949ab');
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            // Отрисовка фона
+            if (images.background) {
+                // Рисуем фон на весь экран
+                ctx.drawImage(images.background, 0, 0, canvas.width, canvas.height);
+            } else {
+                // Запасной вариант - градиент
+                const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                gradient.addColorStop(0, '#1a237e');
+                gradient.addColorStop(0.5, '#283593');
+                gradient.addColorStop(1, '#3949ab');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
             
             // Крыша внизу, не деформированная
             if (images.roof) {
@@ -1440,7 +1447,7 @@
             });
             ctx.globalAlpha = 1;
             
-            // Сугробы (без вопросительных знаков)
+            // Сугробы
             snowdrifts.forEach(snowdrift => {
                 if (images.snowdrift) {
                     ctx.save();

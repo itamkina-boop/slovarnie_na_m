@@ -692,25 +692,25 @@
             { word: "м.тежный", missing: [1], correct: "я", hint: "мятежный, бунтарский" }
         ];
 
-        // Фоны для города с промтами и названиями файлов
+        // Фоны для города - упрощенная версия без загрузки картинок
         const CITY_BACKGROUNDS = [
             {
                 name: "🏙️ Центр города",
                 districts: [
                     { 
                         name: "📚 Учебный район", 
-                        filename: "school_district.png",
-                        prompt: "Зимний школьный двор с сугробами, детская площадка под снегом, учебное здание в фоне, вечернее освещение фонарей"
+                        bgColor: "#1a237e",
+                        roadColor: "#3949ab"
                     },
                     { 
                         name: "🏛️ Исторический квартал", 
-                        filename: "historic_district.png",
-                        prompt: "Старинные здания в снегу, мостовая покрытая льдом, фонари с мягким светом, зимний вечер в историческом центре города"
+                        bgColor: "#0d47a1",
+                        roadColor: "#1565c0"
                     },
                     { 
                         name: "🎭 Театральная площадь", 
-                        filename: "theater_square.png",
-                        prompt: "Большая площадь перед театром, снежные сугробы по краям, фонтаны замерзшие, праздничная иллюминация"
+                        bgColor: "#1565c0",
+                        roadColor: "#1976d2"
                     }
                 ]
             },
@@ -719,18 +719,18 @@
                 districts: [
                     { 
                         name: "🏡 Тихий переулок", 
-                        filename: "quiet_alley.png",
-                        prompt: "Уютный переулок в спальном районе, небольшие дома под снегом, заснеженные деревья, спокойная зимняя атмосфера"
+                        bgColor: "#283593",
+                        roadColor: "#5c6bc0"
                     },
                     { 
                         name: "🌳 Парковая зона", 
-                        filename: "park_area.png",
-                        prompt: "Зимний парк с заснеженными дорожками, скамейки под снегом, фонари вдоль аллеи, замерзшее озеро вдалеке"
+                        bgColor: "#1e88e5",
+                        roadColor: "#42a5f5"
                     },
                     { 
                         name: "🏫 Школьный двор", 
-                        filename: "school_yard.png",
-                        prompt: "Школьный двор зимой, сугробы вокруг спортивной площадки, следы на снегу, здание школы в фоне"
+                        bgColor: "#1976d2",
+                        roadColor: "#2196f3"
                     }
                 ]
             },
@@ -739,18 +739,18 @@
                 districts: [
                     { 
                         name: "🏢 Офисный квартал", 
-                        filename: "office_district.png",
-                        prompt: "Современные офисные здания в снегу, парковка с заснеженными машинами, зимний городской пейзаж, вечерние огни"
+                        bgColor: "#0d47a1",
+                        roadColor: "#546e7a"
                     },
                     { 
                         name: "🏭 Заводская улица", 
-                        filename: "factory_street.png",
-                        prompt: "Промышленная зона зимой, трубы заводов, заснеженные склады, грузовики на улице, суровый зимний пейзаж"
+                        bgColor: "#37474f",
+                        roadColor: "#607d8b"
                     },
                     { 
                         name: "🚧 Строительная площадка", 
-                        filename: "construction_site.png",
-                        prompt: "Строительная площадка покрытая снегом, краны и строительная техника, забор с рекламой, зимние сугробы"
+                        bgColor: "#455a64",
+                        roadColor: "#78909c"
                     }
                 ]
             }
@@ -822,8 +822,6 @@
         let currentDistrictIndex = 0;
         let cameraX = 0;
         let cityWidth = 3000;
-        let backgrounds = {}; // Загруженные фоны
-        let backgroundImages = {}; // Изображения фонов
         
         let snowdrifts = [];
         let mergedSnowdrifts = [];
@@ -837,7 +835,7 @@
         let activeMergedSnowdrift = null;
         let mergedWordIndex = 0;
         let mergedWords = [];
-        let gamePaused = false; // Флаг паузы игры
+        let gamePaused = false;
         
         // Аудио
         let audioContext;
@@ -973,28 +971,13 @@
                 { key: 'snowdrift', src: 'snowdrift.png' }
             ];
 
-            // Добавляем все фоны из конфигурации
-            CITY_BACKGROUNDS.forEach((city, cityIndex) => {
-                city.districts.forEach((district, districtIndex) => {
-                    const key = `bg_${cityIndex}_${districtIndex}`;
-                    imageFiles.push({
-                        key: key,
-                        src: district.filename
-                    });
-                });
-            });
-
             let loadedCount = 0;
             const totalCount = imageFiles.length;
 
             imageFiles.forEach((file) => {
                 const img = new Image();
                 img.onload = () => {
-                    if (file.key.startsWith('bg_')) {
-                        backgroundImages[file.key] = img;
-                    } else {
-                        images[file.key] = img;
-                    }
+                    images[file.key] = img;
                     loadedCount++;
                     
                     const progress = Math.round((loadedCount / totalCount) * 100);
@@ -1015,6 +998,35 @@
                 
                 img.onerror = () => {
                     console.warn(`Не удалось загрузить изображение: ${file.src}`);
+                    // Создаем placeholder изображения
+                    const canvas = document.createElement('canvas');
+                    canvas.width = file.key.includes('janitor') ? 100 : 70;
+                    canvas.height = file.key.includes('janitor') ? 180 : 50;
+                    const ctx = canvas.getContext('2d');
+                    
+                    if (file.key.includes('janitor')) {
+                        // Placeholder для дворника
+                        ctx.fillStyle = file.key.includes('left') ? '#FF5722' : '#FF9800';
+                        ctx.fillRect(0, 0, 100, 180);
+                        
+                        // Голова
+                        ctx.fillStyle = '#FFCCBC';
+                        ctx.beginPath();
+                        ctx.arc(50, 40, 30, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                        // Тело
+                        ctx.fillStyle = '#3F51B5';
+                        ctx.fillRect(30, 70, 40, 80);
+                    } else {
+                        // Placeholder для сугроба
+                        ctx.fillStyle = '#FFFFFF';
+                        ctx.beginPath();
+                        ctx.ellipse(35, 25, 35, 25, 0, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    
+                    images[file.key] = canvas;
                     loadedCount++;
                     
                     const progress = Math.round((loadedCount / totalCount) * 100);
@@ -1036,10 +1048,9 @@
             });
         }
 
-        // Получение текущего фона
-        function getCurrentBackground() {
-            const key = `bg_${currentCityIndex}_${currentDistrictIndex}`;
-            return backgroundImages[key];
+        // Получение текущего района
+        function getCurrentDistrict() {
+            return CITY_BACKGROUNDS[currentCityIndex].districts[currentDistrictIndex];
         }
 
         // Смена района
@@ -1463,16 +1474,21 @@
             mergedWordIndex = 0;
             gamePaused = false;
             
-            // Проверяем, изучены ли все слова для текущего уровня
-            if (learnedWords.size >= LEVEL_SETTINGS[level].wordsPerLevel) {
-                allWordsCompleted = true;
-                setTimeout(() => showCelebration(true), 1000);
-            }
-            
             // Меняем район после 5 правильных слов подряд
             if (correctInRow >= 5) {
                 correctInRow = 0;
                 changeDistrict();
+            }
+            
+            // Проверяем, изучены ли все слова для текущего уровня
+            checkLevelCompletion();
+        }
+
+        // Проверка завершения уровня
+        function checkLevelCompletion() {
+            if (learnedWords.size >= LEVEL_SETTINGS[level].wordsPerLevel) {
+                allWordsCompleted = true;
+                setTimeout(() => showCelebration(true), 1000);
             }
         }
 
@@ -1584,8 +1600,6 @@
                 }
                 
                 // Находим и удаляем сугроб
-                let snowdriftToRemove = null;
-                
                 if (activeMergedSnowdrift) {
                     // Это слово из слитого сугроба
                     mergedWordIndex++;
@@ -1601,7 +1615,7 @@
                     // Обычный сугроб
                     const index = snowdrifts.findIndex(s => s.id === currentSnowdriftId);
                     if (index > -1) {
-                        snowdriftToRemove = snowdrifts[index];
+                        const snowdriftToRemove = snowdrifts[index];
                         explodeSnowdrift(snowdriftToRemove);
                         snowdrifts.splice(index, 1);
                     }
@@ -1610,11 +1624,8 @@
                 createParticles('#FFD700', canvas.width/2, canvas.height/2);
                 playSound('levelup', 440, 0.5, 0.2);
                 
-                // Проверяем, изучены ли все слова для текущего уровня
-                if (learnedWords.size >= LEVEL_SETTINGS[level].wordsPerLevel) {
-                    allWordsCompleted = true;
-                    setTimeout(() => showCelebration(true), 1000);
-                }
+                // Проверяем завершение уровня
+                checkLevelCompletion();
             } else {
                 correctInRow = 0;
                 createParticles('#FF5252', canvas.width/2, canvas.height/2);
@@ -1649,6 +1660,85 @@
         function gameOver() {
             gameState = 'gameOver';
             showCelebration(false);
+        }
+
+        // Показ экрана поздравления
+        function showCelebration(isVictory) {
+            if (isVictory) {
+                celebrationTitle.textContent = '🎉 ВСЕ СЛОВА ИЗУЧЕНЫ! 🎉';
+                celebrationSubtext.textContent = getRandomPraise();
+                
+                const statsHTML = `
+                    <div style="text-align: center; margin: 30px 0; background: rgba(255,255,255,0.1); padding: 20px; border-radius: 15px; max-width: 500px;">
+                        <div style="font-size: 24px; color: #FFD700; margin: 10px 0;">
+                            Уровень "${LEVEL_NAMES[level]}" завершён!
+                        </div>
+                        <div style="font-size: 18px; color: #4CAF50; margin: 10px 0;">
+                            📚 Изучено слов: ${learnedWords.size}/${LEVEL_SETTINGS[level].wordsPerLevel}
+                        </div>
+                        <div style="font-size: 18px; color: #2196F3; margin: 10px 0;">
+                            🎯 Точность: ${Math.round((learnedWords.size / (learnedWords.size + (3 - lives))) * 100)}%
+                        </div>
+                        <div style="font-size: 18px; color: #FF9800; margin: 10px 0;">
+                            ⭐ Счёт: ${score}
+                        </div>
+                        <div style="font-size: 16px; color: #aaa; margin-top: 15px;">
+                            Следующий уровень в новом районе города!
+                        </div>
+                    </div>
+                `;
+                
+                celebrationStats.innerHTML = statsHTML;
+                
+                if (level < 3) {
+                    nextLevelBtn.style.display = 'block';
+                    nextLevelBtn.textContent = `🚀 УРОВЕНЬ ${level+1}: ${LEVEL_NAMES[level+1].toUpperCase()}`;
+                } else {
+                    nextLevelBtn.style.display = 'none';
+                    celebrationSubtext.textContent = 'Вы прошли весь город! Вы — настоящий мастер русского языка!';
+                    celebrationTitle.innerHTML = '👑 ПОБЕДА! ВЫ ОБОШЛИ ВЕСЬ ГОРОД! 👑';
+                }
+            } else {
+                celebrationTitle.textContent = '❄️ ИГРА ОКОНЧЕНА ❄️';
+                celebrationSubtext.textContent = 'Попробуйте снова!';
+                nextLevelBtn.style.display = 'none';
+                
+                const statsHTML = `
+                    <div style="text-align: center; margin: 30px 0; background: rgba(255,255,255,0.1); padding: 20px; border-radius: 15px; max-width: 500px;">
+                        <div style="font-size: 24px; color: #FFD700; margin: 10px 0;">
+                            Итоговый счёт: ${score}
+                        </div>
+                        <div style="font-size: 18px; color: #4CAF50; margin: 10px 0;">
+                            📚 Изучено слов: ${learnedWords.size}
+                        </div>
+                        <div style="font-size: 18px; color: #2196F3; margin: 10px 0;">
+                            🎯 Точность: ${Math.round((learnedWords.size / (learnedWords.size + (3 - lives))) * 100)}%
+                        </div>
+                        <div style="font-size: 18px; color: #FF9800; margin: 10px 0;">
+                            🏆 Уровень: ${LEVEL_NAMES[level]}
+                        </div>
+                    </div>
+                `;
+                
+                celebrationStats.innerHTML = statsHTML;
+            }
+            
+            celebration.style.display = 'flex';
+            createMassiveConfetti();
+            gamePaused = true;
+        }
+
+        // Случайные похвалы
+        function getRandomPraise() {
+            const praises = [
+                'Блестящий результат! Ваш словарный запас впечатляет!',
+                'Потрясающе! Вы настоящий знаток русского языка!',
+                'Великолепно! Каждое слово — как родное!',
+                'Фантастика! Вы справились идеально!',
+                'Изумительно! Русский язык — ваша стихия!'
+            ];
+            
+            return praises[Math.floor(Math.random() * praises.length)];
         }
 
         // Получение полного слова
@@ -1703,7 +1793,6 @@
             }
         }
 
-        // Остальные функции (createConfetti, createMassiveConfetti, updateConfetti, updateParticles, createWordCompleted) остаются без изменений
         // Создание конфетти
         function createConfetti() {
             const colors = ['#FF4081', '#4CAF50', '#2196F3', '#FF9800', '#9C27B0', '#FFD700'];
@@ -1785,29 +1874,68 @@
             }, 2000);
         }
 
+        // Эффект перехода уровня
+        function createLevelTransition() {
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    createParticles('#FFD700', canvas.width/2, canvas.height/2);
+                }, i * 20);
+            }
+            
+            playSound('levelup', 523.25, 1, 0.3);
+        }
+
+        // Переход на следующий уровень
+        function nextLevel() {
+            level++;
+            allWordsCompleted = false;
+            availableWords = [...ALL_WORDS].sort(() => Math.random() - 0.5);
+            currentWordIndex = 0;
+            correctInRow = 0;
+            snowdrifts = [];
+            mergedSnowdrifts = [];
+            explodingSnowdrifts = [];
+            
+            celebration.style.display = 'none';
+            gameState = 'playing';
+            gamePaused = false;
+            
+            updateUI();
+            updateProgress();
+            
+            createLevelTransition();
+            
+            setTimeout(() => createSnowdrift(), 500);
+            setTimeout(() => createSnowdrift(), 1500);
+            setTimeout(() => createSnowdrift(), 2500);
+        }
+
         // Отрисовка игры
         function drawGame() {
+            // Получаем текущий район
+            const district = getCurrentDistrict();
+            
             // Очищаем canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // Рисуем фон
-            const bg = getCurrentBackground();
-            if (bg) {
-                // Рисуем фон, повторяя его по горизонтали
-                const pattern = ctx.createPattern(bg, 'repeat-x');
-                ctx.fillStyle = pattern;
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-            } else {
-                // Запасной фон
-                const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-                gradient.addColorStop(0, '#1a237e');
-                gradient.addColorStop(1, '#0d47a1');
-                ctx.fillStyle = gradient;
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            // Рисуем фон (небо)
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, district.bgColor);
+            gradient.addColorStop(1, '#0d47a1');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Рисуем простые здания в фоне
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+            for (let i = 0; i < 5; i++) {
+                const buildingWidth = 100 + Math.random() * 150;
+                const buildingHeight = 200 + Math.random() * 300;
+                const x = (i * 300 + cameraX * 0.3) % (canvas.width + 300) - 150;
+                ctx.fillRect(x, canvas.height - buildingHeight - 50, buildingWidth, buildingHeight);
             }
             
             // Дорога
-            ctx.fillStyle = 'rgba(55, 71, 79, 0.8)';
+            ctx.fillStyle = district.roadColor;
             ctx.fillRect(0, canvas.height - 50, canvas.width, 50);
             
             // Разделительная полоса
@@ -2161,15 +2289,6 @@
         // Запуск игры при загрузке страницы
         window.addEventListener('load', () => {
             loadImages();
-        });
-
-        // Промты для фонов (для использования в AI-генераторах изображений)
-        console.log("Промты для генерации фонов:");
-        CITY_BACKGROUNDS.forEach((city, cityIndex) => {
-            console.log(`\n${city.name}:`);
-            city.districts.forEach((district, districtIndex) => {
-                console.log(`${district.name} (${district.filename}): ${district.prompt}`);
-            });
         });
     </script>
 </body>

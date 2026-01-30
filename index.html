@@ -85,37 +85,96 @@
             50% { transform: translateY(-10px); }
         }
         
-        #wordPopup {
+        #wordOverlay {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.95);
-            padding: 30px;
-            border-radius: 20px;
-            border: 4px solid #4CAF50;
             z-index: 200;
             width: 90%;
-            max-width: 500px;
+            max-width: 600px;
             display: none;
-            box-shadow: 0 0 40px rgba(76, 175, 80, 0.5);
+            pointer-events: none;
         }
         
         #wordDisplay {
-            font-size: 36px;
+            font-size: 48px;
             text-align: center;
             margin: 20px 0;
             min-height: 60px;
-            letter-spacing: 2px;
+            letter-spacing: 3px;
             font-weight: bold;
+            text-shadow: 
+                3px 3px 0 #000,
+                -1px -1px 0 #000,
+                1px -1px 0 #000,
+                -1px 1px 0 #000,
+                1px 1px 0 #000,
+                0 0 20px rgba(0, 0, 0, 0.8);
+            background: rgba(255, 255, 255, 0.15);
+            padding: 20px 40px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        #mobileKeyboard {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(20px);
+            border-top: 3px solid #4CAF50;
+            z-index: 300;
+            display: none;
+            padding: 15px 0;
+        }
+        
+        .keyboard-row {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin: 8px 0;
+            padding: 0 10px;
+        }
+        
+        .keyboard-key {
+            background: linear-gradient(45deg, #2196F3, #1976D2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            color: white;
+            font-size: 22px;
+            font-weight: bold;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            touch-action: manipulation;
+        }
+        
+        .keyboard-key:hover {
+            transform: scale(1.1);
+            background: linear-gradient(45deg, #42A5F5, #1E88E5);
+            box-shadow: 0 0 15px rgba(33, 150, 243, 0.6);
+        }
+        
+        .keyboard-key:active {
+            transform: scale(0.95);
         }
         
         #feedback {
-            font-size: 24px;
+            font-size: 28px;
             text-align: center;
             min-height: 40px;
             margin: 15px 0;
             transition: all 0.3s;
+            text-shadow: 
+                2px 2px 0 #000,
+                0 0 10px rgba(0, 0, 0, 0.8);
         }
         
         .correct { 
@@ -372,6 +431,35 @@
             z-index: 100;
         }
         
+        #mergedWordInfo {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            border-radius: 20px;
+            border: 3px solid #FF9800;
+            z-index: 400;
+            display: none;
+            text-align: center;
+            max-width: 500px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .merged-title {
+            font-size: 24px;
+            color: #FF9800;
+            margin-bottom: 15px;
+        }
+        
+        .merged-count {
+            font-size: 36px;
+            color: #4CAF50;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
         @media (max-width: 768px) {
             #ui {
                 top: 10px;
@@ -390,7 +478,8 @@
             }
             
             #wordDisplay {
-                font-size: 28px;
+                font-size: 32px;
+                padding: 15px 25px;
             }
             
             .celebration-text {
@@ -432,6 +521,19 @@
                 right: 170px;
                 font-size: 14px;
                 padding: 8px 12px;
+            }
+            
+            #mergedWordInfo {
+                width: 90%;
+                padding: 15px;
+            }
+            
+            .merged-title {
+                font-size: 20px;
+            }
+            
+            .merged-count {
+                font-size: 28px;
             }
         }
     </style>
@@ -485,13 +587,71 @@
         
         <div id="keyboardHint">⌨️ Вводите буквы с клавиатуры</div>
         
-        <div id="wordPopup">
+        <div id="wordOverlay">
             <div id="wordDisplay"></div>
             <div id="feedback"></div>
         </div>
         
+        <div id="mergedWordInfo">
+            <div class="merged-title">⚡ СУГРОБ СЛИЛСЯ! ⚡</div>
+            <div id="mergedWordsCount" class="merged-count">2 слова</div>
+            <div id="mergedWordsProgress">Прогресс: 0/2</div>
+            <div style="margin-top: 15px; color: #aaa; font-size: 14px;">
+                Решите все слова, чтобы расчистить большой сугроб
+            </div>
+        </div>
+        
+        <div id="mobileKeyboard">
+            <div class="keyboard-row">
+                <div class="keyboard-key" data-letter="а">А</div>
+                <div class="keyboard-key" data-letter="б">Б</div>
+                <div class="keyboard-key" data-letter="в">В</div>
+                <div class="keyboard-key" data-letter="г">Г</div>
+                <div class="keyboard-key" data-letter="д">Д</div>
+                <div class="keyboard-key" data-letter="е">Е</div>
+            </div>
+            <div class="keyboard-row">
+                <div class="keyboard-key" data-letter="ё">Ё</div>
+                <div class="keyboard-key" data-letter="ж">Ж</div>
+                <div class="keyboard-key" data-letter="з">З</div>
+                <div class="keyboard-key" data-letter="и">И</div>
+                <div class="keyboard-key" data-letter="й">Й</div>
+                <div class="keyboard-key" data-letter="к">К</div>
+            </div>
+            <div class="keyboard-row">
+                <div class="keyboard-key" data-letter="л">Л</div>
+                <div class="keyboard-key" data-letter="м">М</div>
+                <div class="keyboard-key" data-letter="н">Н</div>
+                <div class="keyboard-key" data-letter="о">О</div>
+                <div class="keyboard-key" data-letter="п">П</div>
+                <div class="keyboard-key" data-letter="р">Р</div>
+            </div>
+            <div class="keyboard-row">
+                <div class="keyboard-key" data-letter="с">С</div>
+                <div class="keyboard-key" data-letter="т">Т</div>
+                <div class="keyboard-key" data-letter="у">У</div>
+                <div class="keyboard-key" data-letter="ф">Ф</div>
+                <div class="keyboard-key" data-letter="х">Х</div>
+                <div class="keyboard-key" data-letter="ц">Ц</div>
+            </div>
+            <div class="keyboard-row">
+                <div class="keyboard-key" data-letter="ч">Ч</div>
+                <div class="keyboard-key" data-letter="ш">Ш</div>
+                <div class="keyboard-key" data-letter="щ">Щ</div>
+                <div class="keyboard-key" data-letter="ъ">Ъ</div>
+                <div class="keyboard-key" data-letter="ы">Ы</div>
+                <div class="keyboard-key" data-letter="ь">Ь</div>
+            </div>
+            <div class="keyboard-row">
+                <div class="keyboard-key" data-letter="э">Э</div>
+                <div class="keyboard-key" data-letter="ю">Ю</div>
+                <div class="keyboard-key" data-letter="я">Я</div>
+                <div class="keyboard-key" data-letter="backspace" style="width: 100px; background: linear-gradient(45deg, #FF5252, #D32F2F);">←</div>
+            </div>
+        </div>
+        
         <div id="celebration">
-            <div class="celebration-text" id="celebrationTitle">🎉 ПОЗДРАВЛЯЕМ! 🎉</div>
+            <div class="celebration-text" id="celebrationTitle">🎉 ВСЕ СЛОВА ИЗУЧЕНЫ! 🎉</div>
             <div class="celebration-subtext" id="celebrationSubtext"></div>
             <div id="celebrationStats"></div>
             <div id="nextLevelBtn" style="display: none;">🚀 СЛЕДУЮЩИЙ УРОВЕНЬ</div>
@@ -598,8 +758,9 @@
         let currentMissingIndex = 0;
         let snowflakes = [];
         let particles = [];
-        let player = { x: 0, y: 0, width: 80, height: 120, direction: 'right' };
+        let player = { x: 0, y: 0, width: 100, height: 180, direction: 'right' }; // Увеличил размер
         let snowdrifts = [];
+        let mergedSnowdrifts = []; // Слитые сугробы
         let animationId = null;
         let allWordsCompleted = false;
         let lastSnowdriftTime = 0;
@@ -607,6 +768,9 @@
         let availableWords = [...ALL_WORDS];
         let currentSnowdriftId = null;
         let explodingSnowdrifts = [];
+        let activeMergedSnowdrift = null;
+        let mergedWordIndex = 0;
+        let mergedWords = [];
         
         // Погодные эффекты
         let clouds = [];
@@ -614,10 +778,10 @@
         let weatherParticles = [];
         let currentWeather = WEATHER_TYPES.SUNNY;
         let weatherChangeTime = 0;
-        let weatherDuration = 30000; // 30 секунд на каждую погоду
+        let weatherDuration = 30000;
         let soundEnabled = true;
         
-        // Аудио контекст и генераторы звуков
+        // Аудио контекст
         let audioContext;
         let masterGain;
 
@@ -627,7 +791,8 @@
             janitor_left: null,
             janitor_right: null,
             snowdrift: null,
-            roof: null
+            roof: null,
+            big_snowdrift: null
         };
 
         // DOM элементы
@@ -643,7 +808,7 @@
         const levelInfo = document.getElementById('levelInfo');
         const levelBadge = document.getElementById('levelBadge');
         const dictionaryWords = document.getElementById('dictionaryWords');
-        const wordPopup = document.getElementById('wordPopup');
+        const wordOverlay = document.getElementById('wordOverlay');
         const wordDisplay = document.getElementById('wordDisplay');
         const feedbackElement = document.getElementById('feedback');
         const keyboardHint = document.getElementById('keyboardHint');
@@ -656,6 +821,11 @@
         const nextLevelBtn = document.getElementById('nextLevelBtn');
         const restartBtn = document.getElementById('restartBtn');
         const comboCounter = document.getElementById('comboCounter');
+        const mobileKeyboard = document.getElementById('mobileKeyboard');
+        const mergedWordInfo = document.getElementById('mergedWordInfo');
+        const mergedWordsCount = document.getElementById('mergedWordsCount');
+        const mergedWordsProgress = document.getElementById('mergedWordsProgress');
+        const keyboardKeys = document.querySelectorAll('.keyboard-key');
 
         // Инициализация звуковой системы
         function initAudio() {
@@ -664,10 +834,7 @@
                 masterGain = audioContext.createGain();
                 masterGain.connect(audioContext.destination);
                 masterGain.gain.value = soundEnabled ? 0.3 : 0;
-                
-                console.log("Аудио система инициализирована");
             } catch (e) {
-                console.warn("Аудио не поддерживается:", e);
                 soundEnabled = false;
                 soundToggle.style.display = 'none';
             }
@@ -684,21 +851,20 @@
                 oscillator.connect(gainNode);
                 gainNode.connect(masterGain);
                 
-                // Настройки в зависимости от типа звука
                 switch(type) {
                     case 'correct':
-                        oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5
-                        oscillator.frequency.exponentialRampToValueAtTime(659.25, audioContext.currentTime + 0.1); // E5
+                        oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime);
+                        oscillator.frequency.exponentialRampToValueAtTime(659.25, audioContext.currentTime + 0.1);
                         oscillator.type = 'sine';
                         break;
                     case 'wrong':
-                        oscillator.frequency.setValueAtTime(392, audioContext.currentTime); // G4
-                        oscillator.frequency.exponentialRampToValueAtTime(293.66, audioContext.currentTime + 0.15); // D4
+                        oscillator.frequency.setValueAtTime(392, audioContext.currentTime);
+                        oscillator.frequency.exponentialRampToValueAtTime(293.66, audioContext.currentTime + 0.15);
                         oscillator.type = 'sawtooth';
                         break;
                     case 'collect':
-                        oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime); // E5
-                        oscillator.frequency.exponentialRampToValueAtTime(830.61, audioContext.currentTime + 0.1); // G#5
+                        oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime);
+                        oscillator.frequency.exponentialRampToValueAtTime(830.61, audioContext.currentTime + 0.1);
                         oscillator.type = 'triangle';
                         break;
                     case 'explode':
@@ -712,13 +878,14 @@
                         duration = 0.05;
                         break;
                     case 'levelup':
-                        // Восходящая арпеджио
-                        const times = [0, 0.1, 0.2, 0.3];
-                        const freqs = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
-                        times.forEach((time, i) => {
-                            oscillator.frequency.setValueAtTime(freqs[i], audioContext.currentTime + time);
-                        });
+                        oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime);
+                        oscillator.frequency.exponentialRampToValueAtTime(1046.50, audioContext.currentTime + 0.5);
                         oscillator.type = 'sine';
+                        break;
+                    case 'merge':
+                        oscillator.frequency.setValueAtTime(329.63, audioContext.currentTime);
+                        oscillator.frequency.exponentialRampToValueAtTime(164.81, audioContext.currentTime + 0.3);
+                        oscillator.type = 'sawtooth';
                         break;
                 }
                 
@@ -743,248 +910,6 @@
             soundToggle.title = soundEnabled ? 'Выключить звук' : 'Включить звук';
         }
 
-        // Инициализация погоды
-        function initWeather() {
-            clouds = [];
-            sunrays = [];
-            weatherParticles = [];
-            
-            // Создаем облака
-            for (let i = 0; i < 5; i++) {
-                clouds.push({
-                    x: Math.random() * canvas.width,
-                    y: Math.random() * canvas.height * 0.4,
-                    width: 100 + Math.random() * 100,
-                    height: 40 + Math.random() * 30,
-                    speed: 0.2 + Math.random() * 0.3,
-                    opacity: 0.3 + Math.random() * 0.4
-                });
-            }
-            
-            // Создаем солнечные лучи
-            for (let i = 0; i < 8; i++) {
-                sunrays.push({
-                    angle: (i * Math.PI * 2) / 8,
-                    length: 100 + Math.random() * 50,
-                    width: 3 + Math.random() * 2,
-                    opacity: 0.2 + Math.random() * 0.3,
-                    speed: 0.01 + Math.random() * 0.02
-                });
-            }
-            
-            weatherChangeTime = Date.now();
-        }
-
-        // Смена погоды
-        function changeWeather() {
-            const weatherKeys = Object.keys(WEATHER_TYPES);
-            const currentKey = weatherKeys.find(key => WEATHER_TYPES[key] === currentWeather);
-            const nextIndex = (weatherKeys.indexOf(currentKey) + 1) % weatherKeys.length;
-            currentWeather = WEATHER_TYPES[weatherKeys[nextIndex]];
-            weatherChangeTime = Date.now();
-            
-            // Обновляем индикатор
-            weatherIndicator.textContent = currentWeather.name;
-            
-            // Адаптируем погодные эффекты
-            updateWeatherEffects();
-            
-            // Звук смены погоды
-            playSound('levelup', 440, 0.5, 0.2);
-        }
-
-        // Обновление погодных эффектов
-        function updateWeatherEffects() {
-            // Обновляем облака в зависимости от погоды
-            clouds.forEach(cloud => {
-                switch(currentWeather.name) {
-                    case "💨 Ветрено":
-                        cloud.speed = 0.8 + Math.random() * 0.4;
-                        break;
-                    case "☁️ Облачно":
-                        cloud.speed = 0.3 + Math.random() * 0.2;
-                        cloud.opacity = 0.6 + Math.random() * 0.3;
-                        break;
-                    default:
-                        cloud.speed = 0.2 + Math.random() * 0.3;
-                }
-            });
-            
-            // Добавляем частицы для снегопада
-            if (currentWeather.name === "❄️ Снегопад") {
-                for (let i = 0; i < 20; i++) {
-                    weatherParticles.push({
-                        x: Math.random() * canvas.width,
-                        y: -10,
-                        size: 2 + Math.random() * 3,
-                        speed: 1 + Math.random() * 2,
-                        sway: 0.5 + Math.random() * 0.5,
-                        opacity: 0.5 + Math.random() * 0.5
-                    });
-                }
-            }
-            
-            // Добавляем частицы для ветра
-            if (currentWeather.name === "💨 Ветрено") {
-                for (let i = 0; i < 10; i++) {
-                    weatherParticles.push({
-                        x: -20,
-                        y: Math.random() * canvas.height * 0.7,
-                        width: 30 + Math.random() * 20,
-                        height: 2,
-                        speed: 3 + Math.random() * 2,
-                        opacity: 0.3 + Math.random() * 0.2,
-                        color: '#90CAF9'
-                    });
-                }
-            }
-        }
-
-        // Обновление погодных эффектов
-        function updateWeather() {
-            const now = Date.now();
-            
-            // Смена погоды каждые 30 секунд
-            if (now - weatherChangeTime > weatherDuration) {
-                changeWeather();
-            }
-            
-            // Обновляем облака
-            clouds.forEach(cloud => {
-                cloud.x += cloud.speed * currentWeather.speedMultiplier;
-                if (cloud.x > canvas.width + cloud.width) {
-                    cloud.x = -cloud.width;
-                    cloud.y = Math.random() * canvas.height * 0.4;
-                }
-            });
-            
-            // Обновляем солнечные лучи
-            sunrays.forEach(ray => {
-                ray.angle += ray.speed;
-            });
-            
-            // Обновляем погодные частицы
-            for (let i = weatherParticles.length - 1; i >= 0; i--) {
-                const particle = weatherParticles[i];
-                
-                if (currentWeather.name === "❄️ Снегопад") {
-                    particle.y += particle.speed;
-                    particle.x += Math.sin(particle.y * 0.01) * particle.sway;
-                    
-                    if (particle.y > canvas.height) {
-                        weatherParticles.splice(i, 1);
-                    }
-                } else if (currentWeather.name === "💨 Ветрено") {
-                    particle.x += particle.speed;
-                    
-                    if (particle.x > canvas.width + 50) {
-                        weatherParticles.splice(i, 1);
-                    }
-                }
-            }
-            
-            // Добавляем новые частицы для текущей погоды
-            if (currentWeather.name === "❄️ Снегопад" && Math.random() < 0.1) {
-                weatherParticles.push({
-                    x: Math.random() * canvas.width,
-                    y: -10,
-                    size: 2 + Math.random() * 3,
-                    speed: 1 + Math.random() * 2,
-                    sway: 0.5 + Math.random() * 0.5,
-                    opacity: 0.5 + Math.random() * 0.5
-                });
-            }
-            
-            if (currentWeather.name === "💨 Ветрено" && Math.random() < 0.05) {
-                weatherParticles.push({
-                    x: -20,
-                    y: Math.random() * canvas.height * 0.7,
-                    width: 30 + Math.random() * 20,
-                    height: 2,
-                    speed: 3 + Math.random() * 2,
-                    opacity: 0.3 + Math.random() * 0.2,
-                    color: '#90CAF9'
-                });
-            }
-        }
-
-        // Отрисовка погоды
-        function drawWeather() {
-            // Фоновое затемнение/осветление
-            ctx.fillStyle = currentWeather.color;
-            ctx.globalAlpha = currentWeather.opacity;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.globalAlpha = 1;
-            
-            // Солнечные лучи (только в солнечную погоду)
-            if (currentWeather.name === "☀️ Солнечно") {
-                const centerX = canvas.width * 0.8;
-                const centerY = canvas.height * 0.2;
-                
-                sunrays.forEach(ray => {
-                    ctx.save();
-                    ctx.translate(centerX, centerY);
-                    ctx.rotate(ray.angle);
-                    
-                    ctx.beginPath();
-                    ctx.moveTo(0, 0);
-                    ctx.lineTo(ray.length, 0);
-                    
-                    ctx.strokeStyle = `rgba(255, 215, 0, ${ray.opacity})`;
-                    ctx.lineWidth = ray.width;
-                    ctx.lineCap = 'round';
-                    ctx.stroke();
-                    
-                    ctx.restore();
-                });
-                
-                // Солнце
-                ctx.beginPath();
-                ctx.arc(centerX, centerY, 40, 0, Math.PI * 2);
-                ctx.fillStyle = '#FFD700';
-                ctx.fill();
-            }
-            
-            // Облака
-            clouds.forEach(cloud => {
-                ctx.save();
-                ctx.translate(cloud.x + cloud.width/2, cloud.y + cloud.height/2);
-                
-                ctx.fillStyle = `rgba(255, 255, 255, ${cloud.opacity})`;
-                
-                // Рисуем облако из нескольких кругов
-                for (let i = 0; i < 5; i++) {
-                    const angle = (i * Math.PI * 2) / 5;
-                    const offsetX = Math.cos(angle) * cloud.width * 0.3;
-                    const offsetY = Math.sin(angle) * cloud.height * 0.3;
-                    const radius = cloud.height * 0.4 + Math.random() * 10;
-                    
-                    ctx.beginPath();
-                    ctx.arc(offsetX, offsetY, radius, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-                
-                ctx.restore();
-            });
-            
-            // Погодные частицы
-            weatherParticles.forEach(particle => {
-                ctx.globalAlpha = particle.opacity;
-                
-                if (currentWeather.name === "❄️ Снегопад") {
-                    ctx.fillStyle = 'white';
-                    ctx.beginPath();
-                    ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-                    ctx.fill();
-                } else if (currentWeather.name === "💨 Ветрено") {
-                    ctx.fillStyle = particle.color || '#90CAF9';
-                    ctx.fillRect(particle.x, particle.y, particle.width, particle.height);
-                }
-                
-                ctx.globalAlpha = 1;
-            });
-        }
-
         // Загрузка изображений
         function loadImages() {
             const imageFiles = [
@@ -992,7 +917,8 @@
                 { key: 'janitor_left', src: 'janitor_left.png' },
                 { key: 'janitor_right', src: 'janitor_right.png' },
                 { key: 'snowdrift', src: 'snowdrift.png' },
-                { key: 'roof', src: 'roof.png' }
+                { key: 'roof', src: 'roof.png' },
+                { key: 'big_snowdrift', src: 'snowdrift.png' } // Можно использовать ту же картинку, но масштабировать
             ];
 
             let loadedCount = 0;
@@ -1050,11 +976,10 @@
             resizeCanvas();
             
             player.x = canvas.width / 2 - player.width / 2;
-            player.y = canvas.height - 150;
+            player.y = canvas.height - player.height - 50;
             player.direction = 'right';
             
             initSnowflakes();
-            initWeather();
             initAudio();
             
             score = 0;
@@ -1067,6 +992,7 @@
             allWordsCompleted = false;
             confetti = [];
             snowdrifts = [];
+            mergedSnowdrifts = [];
             explodingSnowdrifts = [];
             
             updateUI();
@@ -1077,12 +1003,12 @@
             if (animationId) cancelAnimationFrame(animationId);
             gameLoop();
             
-            // Первые сугробы падают чуть ниже персонажа
+            // Первые сугробы
             setTimeout(() => createSnowdrift(true), 500);
             setTimeout(() => createSnowdrift(true), 1500);
             setTimeout(() => createSnowdrift(true), 2500);
             
-            // Показываем подсказку про клавиатуру для ПК
+            // Подсказка про клавиатуру для ПК
             if (!isMobile()) {
                 keyboardHint.style.display = 'block';
             }
@@ -1102,8 +1028,8 @@
             
             if (!isFirst && now - lastSnowdriftTime < settings.snowdriftInterval) return;
             
-            // Проверяем вертикальное переполнение
-            if (checkVerticalOverflow()) {
+            // Проверяем переполнение
+            if (checkGameOver()) {
                 gameOver();
                 return;
             }
@@ -1111,97 +1037,193 @@
             // Получаем слово
             let wordData;
             if (level === 1) {
-                // На первом уровне - новые слова без повторений
                 if (learnedWords.size >= settings.wordsPerLevel) {
-                    return; // Все слова изучены
+                    return;
                 }
-                
-                // Берем следующее слово из перемешанного списка
                 wordData = availableWords[currentWordIndex];
                 currentWordIndex = (currentWordIndex + 1) % availableWords.length;
             } else {
-                // На остальных уровнях - перемешанные слова
                 wordData = availableWords[Math.floor(Math.random() * availableWords.length)];
             }
             
-            // Находим свободное место для нового сугроба
+            // Находим свободное место
             let x, y, attempts = 0;
             do {
                 x = 50 + Math.random() * (canvas.width - 100);
                 
                 // Находим максимальную высоту сугроба в этом столбце
-                let maxY = canvas.height - 150; // Начальная высота (земля)
+                let maxY = canvas.height - 50; // Земля
                 
-                for (const snowdrift of snowdrifts) {
-                    if (Math.abs(snowdrift.x - x) < 60) { // Проверяем столбцы шириной 60px
-                        maxY = Math.min(maxY, snowdrift.y - 10); // Ставим выше предыдущего
+                for (const snowdrift of [...snowdrifts, ...mergedSnowdrifts]) {
+                    if (Math.abs(snowdrift.x - x) < snowdrift.width) {
+                        maxY = Math.min(maxY, snowdrift.y - 5);
                     }
                 }
                 
-                // Первые сугробы падают чуть ниже уровня персонажа
-                if (isFirst) {
-                    y = player.y + player.height + 20; // Чуть ниже персонажа
-                } else {
-                    y = maxY - 70; // Отступаем вверх
-                }
-                
+                y = maxY - 70;
                 attempts++;
                 
                 if (attempts > 100) {
-                    y = -100; // Если не нашли место, падаем сверху
+                    y = -100;
                     break;
                 }
-            } while (y < -100); // Не выше чем -100
+            } while (y < -100);
             
             const snowdrift = {
                 x: x,
                 y: y,
                 width: 70,
                 height: 50,
+                originalWidth: 70,
+                originalHeight: 50,
                 word: wordData,
-                speed: settings.snowdriftSpeed * (0.8 + Math.random() * 0.4) * currentWeather.speedMultiplier,
+                speed: settings.snowdriftSpeed * (0.8 + Math.random() * 0.4),
                 collected: false,
-                onGround: isFirst, // Первые сугробы сразу на земле
+                onGround: isFirst,
                 id: Date.now(),
                 rotation: 0,
-                rotationSpeed: (Math.random() - 0.5) * 0.05,
+                targetRotation: 0, // Целевая горизонтальная позиция
+                rotationSpeed: 0.05,
                 wobble: Math.random() * Math.PI * 2,
-                wobbleSpeed: 0.03 + Math.random() * 0.02,
-                targetY: canvas.height - 150, // Целевая позиция на земле
-                column: Math.floor(x / 60) // Столбец для группировки
+                wobbleSpeed: 0.02,
+                targetY: canvas.height - 50,
+                isMerged: false,
+                mergeCount: 0, // Количество слитых сугробов
+                mergedWords: [] // Слова в слитом сугробе
             };
             
-            // Если есть сугроб в этом столбце, корректируем targetY
-            for (const other of snowdrifts) {
-                if (Math.abs(other.x - x) < 60 && other.onGround) {
-                    snowdrift.targetY = other.y - 10;
+            // Корректируем targetY
+            for (const other of [...snowdrifts, ...mergedSnowdrifts]) {
+                if (Math.abs(other.x - x) < other.width && other.onGround) {
+                    snowdrift.targetY = other.y - 5;
                 }
             }
             
-            // Если это первый сугроб, он сразу на земле
             if (isFirst) {
                 snowdrift.y = snowdrift.targetY;
                 snowdrift.onGround = true;
+                snowdrift.rotation = 0;
             }
             
             snowdrifts.push(snowdrift);
             lastSnowdriftTime = now;
             
-            // Звук падения сугроба
             if (!isFirst) {
                 playSound('collect', 200, 0.1, 0.1);
             }
         }
 
-        // Проверка вертикального переполнения
-        function checkVerticalOverflow() {
-            // Проверяем, есть ли сугробы, которые достигли верха экрана
-            for (const snowdrift of snowdrifts) {
-                if (snowdrift.y < 50) { // Если сугроб выше 50px от верха
+        // Проверка завершения игры
+        function checkGameOver() {
+            // Проверяем, достигли ли сугробы верха экрана
+            for (const snowdrift of [...snowdrifts, ...mergedSnowdrifts]) {
+                if (snowdrift.y < 100) {
                     return true;
                 }
             }
             return false;
+        }
+
+        // Проверка столкновения сугробов
+        function checkSnowdriftCollision(snowdrift1, snowdrift2) {
+            return snowdrift1.x < snowdrift2.x + snowdrift2.width &&
+                   snowdrift1.x + snowdrift1.width > snowdrift2.x &&
+                   snowdrift1.y < snowdrift2.y + snowdrift2.height &&
+                   snowdrift1.y + snowdrift1.height > snowdrift2.y;
+        }
+
+        // Объединение сугробов
+        function mergeSnowdrifts(snowdrift1, snowdrift2) {
+            if (snowdrift1.isMerged && snowdrift2.isMerged) {
+                // Оба уже слитые - объединяем их
+                const allWords = [...snowdrift1.mergedWords, ...snowdrift2.mergedWords];
+                const merged = {
+                    x: (snowdrift1.x + snowdrift2.x) / 2,
+                    y: Math.min(snowdrift1.y, snowdrift2.y),
+                    width: snowdrift1.width + snowdrift2.width + 20,
+                    height: Math.max(snowdrift1.height, snowdrift2.height) + 30,
+                    originalWidth: 70,
+                    originalHeight: 50,
+                    onGround: true,
+                    id: Date.now(),
+                    rotation: 0,
+                    isMerged: true,
+                    mergeCount: snowdrift1.mergeCount + snowdrift2.mergeCount,
+                    mergedWords: allWords,
+                    collected: false,
+                    wobble: 0,
+                    wobbleSpeed: 0.01
+                };
+                
+                mergedSnowdrifts.push(merged);
+                
+                // Удаляем старые сугробы
+                const index1 = mergedSnowdrifts.indexOf(snowdrift1);
+                const index2 = mergedSnowdrifts.indexOf(snowdrift2);
+                if (index1 > -1) mergedSnowdrifts.splice(index1, 1);
+                if (index2 > -1) mergedSnowdrifts.splice(index2, 1);
+                
+                // Звук слияния
+                playSound('merge', 200, 0.3, 0.2);
+                
+                // Эффект слияния
+                createParticles('#2196F3', merged.x + merged.width/2, merged.y + merged.height/2);
+                
+                return merged;
+            } else if (snowdrift1.isMerged || snowdrift2.isMerged) {
+                // Один слитый, другой обычный
+                const mergedSnowdrift = snowdrift1.isMerged ? snowdrift1 : snowdrift2;
+                const singleSnowdrift = snowdrift1.isMerged ? snowdrift2 : snowdrift1;
+                
+                mergedSnowdrift.mergedWords.push(singleSnowdrift.word);
+                mergedSnowdrift.mergeCount++;
+                mergedSnowdrift.width += 40;
+                mergedSnowdrift.height += 20;
+                
+                // Звук слияния
+                playSound('merge', 150, 0.2, 0.15);
+                
+                // Удаляем обычный сугроб
+                const index = snowdrifts.indexOf(singleSnowdrift);
+                if (index > -1) snowdrifts.splice(index, 1);
+                
+                return mergedSnowdrift;
+            } else {
+                // Оба обычные - создаем новый слитый
+                const merged = {
+                    x: (snowdrift1.x + snowdrift2.x) / 2,
+                    y: Math.min(snowdrift1.y, snowdrift2.y),
+                    width: 120,
+                    height: 80,
+                    originalWidth: 70,
+                    originalHeight: 50,
+                    onGround: true,
+                    id: Date.now(),
+                    rotation: 0,
+                    isMerged: true,
+                    mergeCount: 2,
+                    mergedWords: [snowdrift1.word, snowdrift2.word],
+                    collected: false,
+                    wobble: 0,
+                    wobbleSpeed: 0.01
+                };
+                
+                mergedSnowdrifts.push(merged);
+                
+                // Удаляем обычные сугробы
+                const index1 = snowdrifts.indexOf(snowdrift1);
+                const index2 = snowdrifts.indexOf(snowdrift2);
+                if (index1 > -1) snowdrifts.splice(index1, 1);
+                if (index2 > -1) snowdrifts.splice(index2, 1);
+                
+                // Звук слияния
+                playSound('merge', 100, 0.4, 0.25);
+                
+                // Эффект слияния
+                createParticles('#4CAF50', merged.x + merged.width/2, merged.y + merged.height/2);
+                
+                return merged;
+            }
         }
 
         // Инициализация снежинок
@@ -1212,7 +1234,7 @@
                     x: Math.random() * canvas.width,
                     y: Math.random() * canvas.height,
                     size: Math.random() * 2 + 1,
-                    speed: Math.random() * 1 + 0.5 * currentWeather.speedMultiplier,
+                    speed: Math.random() * 1 + 0.5,
                     sway: 0.3 + Math.random() * 0.3,
                     opacity: 0.3 + Math.random() * 0.3
                 });
@@ -1228,7 +1250,6 @@
             updateExplodingSnowdrifts();
             updateParticles();
             updateConfetti();
-            updateWeather();
             
             const now = Date.now();
             if (now - lastSnowdriftTime > LEVEL_SETTINGS[level].snowdriftInterval) {
@@ -1240,7 +1261,7 @@
         function updateSnowflakes() {
             snowflakes.forEach(flake => {
                 flake.y += flake.speed;
-                flake.x += Math.sin(flake.y * 0.01) * flake.sway * currentWeather.speedMultiplier;
+                flake.x += Math.sin(flake.y * 0.01) * flake.sway;
                 
                 if (flake.y > canvas.height) {
                     flake.y = -10;
@@ -1251,55 +1272,101 @@
 
         // Обновление сугробов
         function updateSnowdrifts() {
+            // Обновляем обычные сугробы
             for (let i = snowdrifts.length - 1; i >= 0; i--) {
                 const snowdrift = snowdrifts[i];
                 
                 if (!snowdrift.onGround) {
-                    // Анимация падения
+                    // Падение
                     snowdrift.y += snowdrift.speed;
-                    snowdrift.rotation += snowdrift.rotationSpeed;
-                    snowdrift.wobble += snowdrift.wobbleSpeed;
                     
-                    // Небольшое качание при падении
-                    snowdrift.x += Math.sin(snowdrift.wobble) * 0.5 * currentWeather.speedMultiplier;
+                    // Плавное выравнивание при падении
+                    if (Math.abs(snowdrift.rotation) > 0.01) {
+                        snowdrift.rotation += (0 - snowdrift.rotation) * 0.1;
+                    }
                     
+                    // Достигли земли
                     if (snowdrift.y >= snowdrift.targetY) {
                         snowdrift.y = snowdrift.targetY;
                         snowdrift.onGround = true;
                         snowdrift.speed = 0;
-                        snowdrift.rotationSpeed = 0;
-                        snowdrift.wobbleSpeed = 0.01; // Медленное качание на земле
-                    }
-                    
-                    if (checkCollision(player, snowdrift)) {
-                        startWordGame(snowdrift);
+                        snowdrift.rotation = 0;
+                        
+                        // Проверяем столкновение с другими сугробами
+                        for (let j = 0; j < snowdrifts.length; j++) {
+                            if (i !== j && checkSnowdriftCollision(snowdrift, snowdrifts[j])) {
+                                const merged = mergeSnowdrifts(snowdrift, snowdrifts[j]);
+                                snowdrifts.splice(i, 1);
+                                i--; // Корректируем индекс после удаления
+                                break;
+                            }
+                        }
+                        
+                        // Проверяем столкновение с слитыми сугробами
+                        for (let j = 0; j < mergedSnowdrifts.length; j++) {
+                            if (checkSnowdriftCollision(snowdrift, mergedSnowdrifts[j])) {
+                                const merged = mergeSnowdrifts(snowdrift, mergedSnowdrifts[j]);
+                                snowdrifts.splice(i, 1);
+                                i--;
+                                break;
+                            }
+                        }
                     }
                 } else {
                     // Качание на земле
                     snowdrift.wobble += snowdrift.wobbleSpeed;
                     snowdrift.x += Math.sin(snowdrift.wobble) * 0.1;
                     
-                    // Ограничиваем движение по земле
-                    if (snowdrift.x < 50) snowdrift.x = 50;
-                    if (snowdrift.x > canvas.width - 50 - snowdrift.width) snowdrift.x = canvas.width - 50 - snowdrift.width;
-                    
+                    // Столкновение с игроком
                     if (checkCollision(player, snowdrift)) {
                         startWordGame(snowdrift);
                     }
+                    
+                    // Проверка столкновений с другими сугробами на земле
+                    for (let j = 0; j < snowdrifts.length; j++) {
+                        if (i !== j && checkSnowdriftCollision(snowdrift, snowdrifts[j])) {
+                            const merged = mergeSnowdrifts(snowdrift, snowdrifts[j]);
+                            snowdrifts.splice(i, 1);
+                            i--;
+                            break;
+                        }
+                    }
+                    
+                    // Проверка с слитыми сугробами
+                    for (let j = 0; j < mergedSnowdrifts.length; j++) {
+                        if (checkSnowdriftCollision(snowdrift, mergedSnowdrifts[j])) {
+                            const merged = mergeSnowdrifts(snowdrift, mergedSnowdrifts[j]);
+                            snowdrifts.splice(i, 1);
+                            i--;
+                            break;
+                        }
+                    }
                 }
             }
-        }
-
-        // Падение верхних сугробов при удалении нижнего
-        function fallSnowdriftsAbove(deletedSnowdrift) {
-            for (let i = 0; i < snowdrifts.length; i++) {
-                const snowdrift = snowdrifts[i];
-                if (Math.abs(snowdrift.x - deletedSnowdrift.x) < 60 && 
-                    snowdrift.y < deletedSnowdrift.y) {
-                    // Сугроб находится в том же столбце и выше удаленного
-                    snowdrift.targetY = deletedSnowdrift.y;
-                    snowdrift.onGround = false;
-                    snowdrift.speed = LEVEL_SETTINGS[level].snowdriftSpeed * 0.5 * currentWeather.speedMultiplier;
+            
+            // Обновляем слитые сугробы
+            for (let i = 0; i < mergedSnowdrifts.length; i++) {
+                const snowdrift = mergedSnowdrifts[i];
+                
+                // Качание
+                snowdrift.wobble += snowdrift.wobbleSpeed;
+                snowdrift.x += Math.sin(snowdrift.wobble) * 0.05;
+                
+                // Столкновение с игроком
+                if (checkCollision(player, snowdrift) && !activeMergedSnowdrift) {
+                    startMergedWordGame(snowdrift);
+                }
+                
+                // Проверка столкновений между слитыми сугробами
+                for (let j = i + 1; j < mergedSnowdrifts.length; j++) {
+                    if (checkSnowdriftCollision(snowdrift, mergedSnowdrifts[j])) {
+                        const merged = mergeSnowdrifts(snowdrift, mergedSnowdrifts[j]);
+                        mergedSnowdrifts.splice(j, 1);
+                        j--;
+                        mergedSnowdrifts.splice(i, 1);
+                        i--;
+                        break;
+                    }
                 }
             }
         }
@@ -1311,33 +1378,12 @@
                 particle.x += particle.vx;
                 particle.y += particle.vy;
                 particle.life -= 0.02;
-                particle.vy += 0.1; // Гравитация
+                particle.vy += 0.1;
                 
                 if (particle.life <= 0) {
                     explodingSnowdrifts.splice(i, 1);
                 }
             }
-        }
-
-        // Анимация разлета сугроба
-        function explodeSnowdrift(snowdrift) {
-            // Создаем частицы для разлета
-            for (let i = 0; i < 15; i++) {
-                explodingSnowdrifts.push({
-                    x: snowdrift.x + snowdrift.width/2,
-                    y: snowdrift.y + snowdrift.height/2,
-                    vx: (Math.random() - 0.5) * 8,
-                    vy: (Math.random() - 0.5) * 8 - 4,
-                    life: 1,
-                    width: snowdrift.width * 0.3,
-                    height: snowdrift.height * 0.3,
-                    rotation: Math.random() * 360,
-                    rotationSpeed: (Math.random() - 0.5) * 10
-                });
-            }
-            
-            // Звук взрыва
-            playSound('explode', 100, 0.3, 0.2);
         }
 
         // Проверка столкновения
@@ -1350,32 +1396,137 @@
 
         // Начало мини-игры со словом
         function startWordGame(snowdrift) {
-            if (currentWord !== null) return;
+            if (currentWord !== null || activeMergedSnowdrift !== null) return;
             
             currentWord = snowdrift.word;
             currentSnowdriftId = snowdrift.id;
             currentSelection = new Array(currentWord.correct.length).fill(null);
             currentMissingIndex = 0;
             
-            // Звук столкновения
             playSound('collect', 300, 0.1, 0.2);
+            showWordOverlay();
             
-            showWordPopup();
+            // На мобильных показываем клавиатуру
+            if (isMobile()) {
+                mobileKeyboard.style.display = 'block';
+            }
         }
 
-        // Показ попапа со словом
-        function showWordPopup() {
-            wordPopup.style.display = 'block';
+        // Начало игры с слитым сугробом
+        function startMergedWordGame(snowdrift) {
+            if (currentWord !== null || activeMergedSnowdrift !== null) return;
+            
+            activeMergedSnowdrift = snowdrift;
+            mergedWords = [...snowdrift.mergedWords];
+            mergedWordIndex = 0;
+            
+            // Показываем информацию о слитом сугробе
+            mergedWordsCount.textContent = `${snowdrift.mergeCount} слова`;
+            updateMergedProgress();
+            mergedWordInfo.style.display = 'block';
+            
+            // Начинаем с первого слова
+            setTimeout(() => {
+                mergedWordInfo.style.display = 'none';
+                startNextMergedWord();
+            }, 2000);
+        }
+
+        // Начало следующего слова в слитом сугробе
+        function startNextMergedWord() {
+            if (mergedWordIndex >= mergedWords.length) {
+                completeMergedSnowdrift();
+                return;
+            }
+            
+            currentWord = mergedWords[mergedWordIndex];
+            currentSelection = new Array(currentWord.correct.length).fill(null);
+            currentMissingIndex = 0;
+            
+            showWordOverlay();
+            
+            if (isMobile()) {
+                mobileKeyboard.style.display = 'block';
+            }
+        }
+
+        // Обновление прогресса слитого сугроба
+        function updateMergedProgress() {
+            mergedWordsProgress.textContent = `Прогресс: ${mergedWordIndex}/${mergedWords.length}`;
+        }
+
+        // Завершение слитого сугроба
+        function completeMergedSnowdrift() {
+            if (!activeMergedSnowdrift) return;
+            
+            // Награда за все слова
+            let totalScore = 0;
+            for (let i = 0; i < mergedWords.length; i++) {
+                totalScore += 100 * LEVEL_SETTINGS[level].scoreMultiplier;
+            }
+            
+            // Бонус за слитый сугроб
+            totalScore *= 1.5;
+            score += totalScore;
+            
+            // Добавляем слова в словарик
+            mergedWords.forEach(wordData => {
+                const wordKey = wordData.word;
+                const fullWord = getFullWord(wordData);
+                if (!learnedWords.has(wordKey)) {
+                    learnedWords.set(wordKey, {
+                        word: fullWord,
+                        hint: wordData.hint
+                    });
+                }
+            });
+            
+            // Удаляем слитый сугроб с анимацией
+            const index = mergedSnowdrifts.indexOf(activeMergedSnowdrift);
+            if (index > -1) {
+                explodeSnowdrift(activeMergedSnowdrift);
+                mergedSnowdrifts.splice(index, 1);
+            }
+            
+            // Эффекты
+            createParticles('#FFD700', canvas.width/2, canvas.height/2);
+            createConfetti();
+            playSound('levelup', 440, 0.5, 0.2);
+            
+            combo++;
+            updateUI();
+            updateProgress();
+            updateCombo();
+            updateDictionary();
+            
+            activeMergedSnowdrift = null;
+            mergedWords = [];
+            mergedWordIndex = 0;
+            
+            // Проверяем, изучены ли все слова для текущего уровня
+            if (level === 1 && learnedWords.size >= LEVEL_SETTINGS[level].wordsPerLevel) {
+                allWordsCompleted = true;
+                setTimeout(() => showCelebration(true), 1000);
+            }
+        }
+
+        // Показ слова
+        function showWordOverlay() {
+            wordOverlay.style.display = 'block';
             updateWordDisplay();
         }
 
-        // Скрытие попапа
-        function hideWordPopup() {
-            wordPopup.style.display = 'none';
+        // Скрытие слова
+        function hideWordOverlay() {
+            wordOverlay.style.display = 'none';
             feedbackElement.textContent = '';
             feedbackElement.className = '';
             currentWord = null;
             currentSnowdriftId = null;
+            
+            if (isMobile()) {
+                mobileKeyboard.style.display = 'none';
+            }
         }
 
         // Обновление отображения слова
@@ -1391,12 +1542,12 @@
                     if (userLetter) {
                         const correctLetter = currentWord.correct[missingIndex];
                         if (userLetter === correctLetter) {
-                            display += `<span style="color: #4CAF50; font-weight: bold;">${userLetter}</span>`;
+                            display += `<span style="color: #4CAF50; font-weight: bold; text-shadow: 0 0 10px rgba(76, 175, 80, 0.7);">${userLetter}</span>`;
                         } else {
-                            display += `<span style="color: #FF5252; font-weight: bold;">${userLetter}</span>`;
+                            display += `<span style="color: #FF5252; font-weight: bold; text-shadow: 0 0 10px rgba(255, 82, 82, 0.7);">${userLetter}</span>`;
                         }
                     } else {
-                        display += '<span style="color: #2196F3; font-weight: bold;">_</span>';
+                        display += '<span style="color: #2196F3; font-weight: bold; animation: pulse 2s infinite; border-bottom: 3px solid #2196F3; padding: 0 5px;">_</span>';
                     }
                     missingIndex++;
                 } else {
@@ -1473,18 +1624,24 @@
                     updateDictionary();
                 }
                 
-                createParticles('#FFD700', canvas.width/2, canvas.height/2);
-                createConfetti();
-                playSound('levelup', 440, 0.5, 0.2);
+                // Находим и удаляем сугроб
+                let snowdriftToRemove = null;
                 
-                // Находим и удаляем сугроб с анимацией разлета
-                const index = snowdrifts.findIndex(s => s.id === currentSnowdriftId);
-                if (index > -1) {
-                    const snowdrift = snowdrifts[index];
-                    explodeSnowdrift(snowdrift);
-                    fallSnowdriftsAbove(snowdrift); // Верхние сугробы падают вниз
-                    snowdrifts.splice(index, 1);
+                if (activeMergedSnowdrift) {
+                    // Это слово из слитого сугроба
+                    mergedWordIndex++;
+                    updateMergedProgress();
+                } else {
+                    // Обычный сугроб
+                    const index = snowdrifts.findIndex(s => s.id === currentSnowdriftId);
+                    if (index > -1) {
+                        snowdriftToRemove = snowdrifts[index];
+                        snowdrifts.splice(index, 1);
+                    }
                 }
+                
+                createParticles('#FFD700', canvas.width/2, canvas.height/2);
+                playSound('levelup', 440, 0.5, 0.2);
                 
                 // Проверяем, изучены ли все слова для текущего уровня
                 if (level === 1 && learnedWords.size >= LEVEL_SETTINGS[level].wordsPerLevel) {
@@ -1502,7 +1659,11 @@
             updateCombo();
             
             setTimeout(() => {
-                hideWordPopup();
+                if (activeMergedSnowdrift) {
+                    startNextMergedWord();
+                } else {
+                    hideWordOverlay();
+                }
             }, 1000);
         }
 
@@ -1562,7 +1723,7 @@
                             ⭐ Счёт: ${score}
                         </div>
                         <div style="font-size: 16px; color: #aaa; margin-top: 15px;">
-                            Следующий уровень: сугробы падают быстрее!
+                            Следующий уровень: сугробы падают быстрее и сливаются!
                         </div>
                     </div>
                 `;
@@ -1628,6 +1789,7 @@
             correctInRow = 0;
             combo = 0;
             snowdrifts = [];
+            mergedSnowdrifts = [];
             explodingSnowdrifts = [];
             
             celebration.style.display = 'none';
@@ -1644,20 +1806,23 @@
             setTimeout(() => createSnowdrift(true), 2500);
         }
 
-        // Эффект перехода уровня
-        function createLevelTransition() {
-            for (let i = 0; i < 50; i++) {
-                setTimeout(() => {
-                    createParticles('#FFD700', canvas.width/2, canvas.height/2);
-                }, i * 20);
+        // Анимация разлета сугроба
+        function explodeSnowdrift(snowdrift) {
+            for (let i = 0; i < 20; i++) {
+                explodingSnowdrifts.push({
+                    x: snowdrift.x + snowdrift.width/2,
+                    y: snowdrift.y + snowdrift.height/2,
+                    vx: (Math.random() - 0.5) * 10,
+                    vy: (Math.random() - 0.5) * 10 - 5,
+                    life: 1,
+                    width: snowdrift.width * 0.2,
+                    height: snowdrift.height * 0.2,
+                    rotation: Math.random() * 360,
+                    rotationSpeed: (Math.random() - 0.5) * 10
+                });
             }
             
-            levelBadge.style.animation = 'none';
-            setTimeout(() => {
-                levelBadge.style.animation = 'pulse 2s infinite';
-            }, 100);
-            
-            playSound('levelup', 523.25, 1, 0.3);
+            playSound('explode', 100, 0.3, 0.2);
         }
 
         // Создание частиц
@@ -1692,7 +1857,7 @@
             }
         }
 
-        // Массивное конфетти для победы
+        // Массивное конфетти
         function createMassiveConfetti() {
             const colors = ['#FF4081', '#4CAF50', '#2196F3', '#FF9800', '#9C27B0', '#FFD700'];
             for (let i = 0; i < 150; i++) {
@@ -1760,12 +1925,10 @@
         function drawGame() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // Отрисовка фона
+            // Фон
             if (images.background) {
-                // Рисуем фон на весь экран
                 ctx.drawImage(images.background, 0, 0, canvas.width, canvas.height);
             } else {
-                // Запасной вариант - градиент
                 const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
                 gradient.addColorStop(0, '#1a237e');
                 gradient.addColorStop(0.5, '#283593');
@@ -1774,17 +1937,14 @@
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
             }
             
-            // Погодные эффекты
-            drawWeather();
-            
-            // Крыша (если загружена)
+            // Крыша
             if (images.roof) {
                 const roofAspectRatio = 1.5;
                 const roofWidth = canvas.width * 0.7;
                 const roofHeight = roofWidth / roofAspectRatio;
                 const roofX = canvas.width/2 - roofWidth/2;
                 const roofY = canvas.height - roofHeight - 50;
-                ctx.globalAlpha = 0.8; // Полупрозрачная крыша
+                ctx.globalAlpha = 0.8;
                 ctx.drawImage(images.roof, roofX, roofY, roofWidth, roofHeight);
                 ctx.globalAlpha = 1;
             }
@@ -1799,11 +1959,66 @@
             });
             ctx.globalAlpha = 1;
             
-            // Земля (снег)
+            // Земля
             ctx.fillStyle = '#E3F2FD';
             ctx.fillRect(0, canvas.height - 50, canvas.width, 50);
             
-            // Игрок (дворник)
+            // Разлетающиеся сугробы
+            explodingSnowdrifts.forEach(particle => {
+                ctx.save();
+                ctx.translate(particle.x, particle.y);
+                ctx.rotate(particle.rotation * Math.PI / 180);
+                ctx.globalAlpha = particle.life;
+                
+                ctx.fillStyle = '#FFFFFF';
+                ctx.beginPath();
+                ctx.ellipse(0, 0, particle.width/2, particle.height/2, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.restore();
+            });
+            ctx.globalAlpha = 1;
+            
+            // Слитые сугробы (рисуем сначала, чтобы были под обычными)
+            mergedSnowdrifts.forEach(snowdrift => {
+                ctx.save();
+                ctx.translate(snowdrift.x + snowdrift.width/2, snowdrift.y + snowdrift.height/2);
+                
+                // Большой сугроб
+                ctx.fillStyle = '#FFFFFF';
+                ctx.beginPath();
+                ctx.ellipse(0, 0, snowdrift.width/2, snowdrift.height/2, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Обводка для выделения
+                ctx.strokeStyle = '#FF9800';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                
+                // Индикатор количества слов
+                ctx.fillStyle = '#FF9800';
+                ctx.font = 'bold 20px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(`×${snowdrift.mergeCount}`, 0, 0);
+                
+                ctx.restore();
+            });
+            
+            // Обычные сугробы
+            snowdrifts.forEach(snowdrift => {
+                ctx.save();
+                ctx.translate(snowdrift.x + snowdrift.width/2, snowdrift.y + snowdrift.height/2);
+                ctx.rotate(snowdrift.rotation);
+                
+                ctx.fillStyle = '#FFFFFF';
+                ctx.beginPath();
+                ctx.ellipse(0, 0, snowdrift.width/2, snowdrift.height/2, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.restore();
+            });
+            
+            // Игрок (дворник) - рисуем после сугробов
             let playerImage = player.direction === 'left' ? images.janitor_left : images.janitor_right;
             if (playerImage) {
                 const walkOffset = Math.sin(Date.now() * 0.005) * 3;
@@ -1813,66 +2028,6 @@
                 ctx.fillStyle = player.direction === 'left' ? '#FF5722' : '#FF9800';
                 ctx.fillRect(player.x, player.y, player.width, player.height);
             }
-            
-            // Разлетающиеся сугробы
-            explodingSnowdrifts.forEach(particle => {
-                ctx.save();
-                ctx.translate(particle.x, particle.y);
-                ctx.rotate(particle.rotation * Math.PI / 180);
-                ctx.globalAlpha = particle.life;
-                
-                if (images.snowdrift) {
-                    ctx.drawImage(
-                        images.snowdrift,
-                        -particle.width/2,
-                        -particle.height/2,
-                        particle.width,
-                        particle.height
-                    );
-                } else {
-                    // Запасной вариант
-                    ctx.fillStyle = '#FFFFFF';
-                    ctx.fillRect(-particle.width/2, -particle.height/2, particle.width, particle.height);
-                }
-                
-                ctx.restore();
-            });
-            ctx.globalAlpha = 1;
-            
-            // Сугробы
-            snowdrifts.forEach(snowdrift => {
-                if (images.snowdrift) {
-                    ctx.save();
-                    ctx.translate(snowdrift.x + snowdrift.width/2, snowdrift.y + snowdrift.height/2);
-                    ctx.rotate(snowdrift.rotation);
-                    
-                    ctx.drawImage(
-                        images.snowdrift, 
-                        -snowdrift.width/2, 
-                        -snowdrift.height/2, 
-                        snowdrift.width, 
-                        snowdrift.height
-                    );
-                    
-                    ctx.restore();
-                } else {
-                    // Запасной вариант
-                    ctx.save();
-                    ctx.translate(snowdrift.x + snowdrift.width/2, snowdrift.y + snowdrift.height/2);
-                    ctx.rotate(snowdrift.rotation);
-                    
-                    const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, snowdrift.width/2);
-                    gradient.addColorStop(0, '#FFFFFF');
-                    gradient.addColorStop(1, '#E3F2FD');
-                    ctx.fillStyle = gradient;
-                    
-                    ctx.beginPath();
-                    ctx.ellipse(0, 0, snowdrift.width/2, snowdrift.height/2, 0, 0, Math.PI * 2);
-                    ctx.fill();
-                    
-                    ctx.restore();
-                }
-            });
             
             // Конфетти
             confetti.forEach(c => {
@@ -1941,7 +2096,6 @@
                 return;
             }
             
-            // Сортируем слова по алфавиту
             const sortedWords = Array.from(learnedWords.entries()).sort((a, b) => 
                 a[1].word.localeCompare(b[1].word)
             );
@@ -1970,7 +2124,7 @@
             canvas.height = window.innerHeight;
             
             player.x = canvas.width / 2 - player.width / 2;
-            player.y = canvas.height - 150;
+            player.y = canvas.height - player.height - 50;
         }
 
         // Управление игроком
@@ -1995,13 +2149,11 @@
             
             player.x += deltaX * 1.5;
             
-            // Звук движения
             if (Date.now() - lastPlayerMove > 200) {
                 playSound('move', 100, 0.05, 0.1);
                 lastPlayerMove = Date.now();
             }
             
-            // Обновляем направление игрока
             if (deltaX > 0) {
                 player.direction = 'right';
             } else if (deltaX < 0) {
@@ -2018,7 +2170,6 @@
         // Управление с клавиатуры
         document.addEventListener('keydown', (e) => {
             if (gameState === 'playing') {
-                // Управление дворником
                 const speed = 20;
                 
                 switch(e.key) {
@@ -2046,7 +2197,6 @@
             }
             
             if (currentWord !== null) {
-                // Ввод букв с клавиатуры в мини-игре
                 const key = e.key.toLowerCase();
                 const russianLetters = 'абвгдеёжзийклмнопрстуфхцчшщъыьэюя';
                 
@@ -2054,7 +2204,6 @@
                     selectLetter(key);
                     e.preventDefault();
                 } else if (e.key === 'Backspace') {
-                    // Удаление последней буквы
                     if (currentMissingIndex > 0) {
                         currentMissingIndex--;
                         currentSelection[currentMissingIndex] = null;
@@ -2062,13 +2211,28 @@
                     }
                     e.preventDefault();
                 } else if (e.key === 'Enter') {
-                    // Завершение слова досрочно
                     if (currentMissingIndex >= currentWord.correct.length) {
                         completeWord(true);
                     }
                     e.preventDefault();
                 }
             }
+        });
+
+        // Обработчики кнопок мобильной клавиатуры
+        keyboardKeys.forEach(key => {
+            key.addEventListener('click', () => {
+                const letter = key.getAttribute('data-letter');
+                if (letter === 'backspace') {
+                    if (currentMissingIndex > 0) {
+                        currentMissingIndex--;
+                        currentSelection[currentMissingIndex] = null;
+                        updateWordDisplay();
+                    }
+                } else {
+                    selectLetter(letter);
+                }
+            });
         });
 
         // Обработчики кнопок

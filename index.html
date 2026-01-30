@@ -339,6 +339,39 @@
             transition: width 0.3s ease;
         }
         
+        #soundToggle {
+            position: absolute;
+            top: 20px;
+            right: 100px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 15px;
+            border-radius: 15px;
+            border: 2px solid #FF9800;
+            font-size: 20px;
+            color: #FFD700;
+            z-index: 100;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        #soundToggle:hover {
+            transform: scale(1.1);
+            background: rgba(0, 0, 0, 0.9);
+        }
+        
+        #weatherIndicator {
+            position: absolute;
+            top: 20px;
+            right: 220px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 15px;
+            border-radius: 15px;
+            border: 2px solid #2196F3;
+            font-size: 16px;
+            color: #FFD700;
+            z-index: 100;
+        }
+        
         @media (max-width: 768px) {
             #ui {
                 top: 10px;
@@ -380,11 +413,25 @@
                 width: 250px;
             }
             
-            #dictionary, #keyboardHint {
+            #dictionary, #keyboardHint, #soundToggle, #weatherIndicator {
                 bottom: 10px;
                 max-width: 200px;
                 max-height: 150px;
                 font-size: 12px;
+            }
+            
+            #soundToggle {
+                top: 10px;
+                right: 80px;
+                font-size: 18px;
+                padding: 8px 12px;
+            }
+            
+            #weatherIndicator {
+                top: 10px;
+                right: 170px;
+                font-size: 14px;
+                padding: 8px 12px;
             }
         }
     </style>
@@ -428,6 +475,8 @@
         </div>
         
         <div id="comboCounter">Комбо: 0</div>
+        <div id="soundToggle" title="Вкл/Выкл звук">🔊</div>
+        <div id="weatherIndicator" title="Погода">☀️ Солнечно</div>
         
         <div id="dictionary">
             <div class="dictionary-title">📚 Словарик</div>
@@ -525,6 +574,14 @@
             }
         };
 
+        // Типы погоды
+        const WEATHER_TYPES = {
+            SUNNY: { name: "☀️ Солнечно", color: "#FFD700", speedMultiplier: 1.0, opacity: 0.3 },
+            CLOUDY: { name: "☁️ Облачно", color: "#B0BEC5", speedMultiplier: 0.9, opacity: 0.6 },
+            WINDY: { name: "💨 Ветрено", color: "#90CAF9", speedMultiplier: 1.2, opacity: 0.4 },
+            SNOWY: { name: "❄️ Снегопад", color: "#E3F2FD", speedMultiplier: 1.1, opacity: 0.7 }
+        };
+
         // Игровые переменные
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
@@ -550,13 +607,27 @@
         let availableWords = [...ALL_WORDS];
         let currentSnowdriftId = null;
         let explodingSnowdrifts = [];
+        
+        // Погодные эффекты
+        let clouds = [];
+        let sunrays = [];
+        let weatherParticles = [];
+        let currentWeather = WEATHER_TYPES.SUNNY;
+        let weatherChangeTime = 0;
+        let weatherDuration = 30000; // 30 секунд на каждую погоду
+        let soundEnabled = true;
+        
+        // Аудио контекст и генераторы звуков
+        let audioContext;
+        let masterGain;
 
         // Загружаемые изображения
         const images = {
             background: null,
             janitor_left: null,
             janitor_right: null,
-            snowdrift: null
+            snowdrift: null,
+            roof: null
         };
 
         // DOM элементы
@@ -576,6 +647,8 @@
         const wordDisplay = document.getElementById('wordDisplay');
         const feedbackElement = document.getElementById('feedback');
         const keyboardHint = document.getElementById('keyboardHint');
+        const soundToggle = document.getElementById('soundToggle');
+        const weatherIndicator = document.getElementById('weatherIndicator');
         const celebration = document.getElementById('celebration');
         const celebrationTitle = document.getElementById('celebrationTitle');
         const celebrationSubtext = document.getElementById('celebrationSubtext');
@@ -584,13 +657,342 @@
         const restartBtn = document.getElementById('restartBtn');
         const comboCounter = document.getElementById('comboCounter');
 
+        // Инициализация звуковой системы
+        function initAudio() {
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                masterGain = audioContext.createGain();
+                masterGain.connect(audioContext.destination);
+                masterGain.gain.value = soundEnabled ? 0.3 : 0;
+                
+                console.log("Аудио система инициализирована");
+            } catch (e) {
+                console.warn("Аудио не поддерживается:", e);
+                soundEnabled = false;
+                soundToggle.style.display = 'none';
+            }
+        }
+
+        // Генерация звуков
+        function playSound(type, frequency = 440, duration = 0.2, volume = 0.3) {
+            if (!soundEnabled || !audioContext) return;
+            
+            try {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(masterGain);
+                
+                // Настройки в зависимости от типа звука
+                switch(type) {
+                    case 'correct':
+                        oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5
+                        oscillator.frequency.exponentialRampToValueAtTime(659.25, audioContext.currentTime + 0.1); // E5
+                        oscillator.type = 'sine';
+                        break;
+                    case 'wrong':
+                        oscillator.frequency.setValueAtTime(392, audioContext.currentTime); // G4
+                        oscillator.frequency.exponentialRampToValueAtTime(293.66, audioContext.currentTime + 0.15); // D4
+                        oscillator.type = 'sawtooth';
+                        break;
+                    case 'collect':
+                        oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime); // E5
+                        oscillator.frequency.exponentialRampToValueAtTime(830.61, audioContext.currentTime + 0.1); // G#5
+                        oscillator.type = 'triangle';
+                        break;
+                    case 'explode':
+                        oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+                        oscillator.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + 0.3);
+                        oscillator.type = 'square';
+                        break;
+                    case 'move':
+                        oscillator.frequency.setValueAtTime(100, audioContext.currentTime);
+                        oscillator.type = 'sine';
+                        duration = 0.05;
+                        break;
+                    case 'levelup':
+                        // Восходящая арпеджио
+                        const times = [0, 0.1, 0.2, 0.3];
+                        const freqs = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                        times.forEach((time, i) => {
+                            oscillator.frequency.setValueAtTime(freqs[i], audioContext.currentTime + time);
+                        });
+                        oscillator.type = 'sine';
+                        break;
+                }
+                
+                gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + duration);
+                
+            } catch (e) {
+                console.warn("Не удалось воспроизвести звук:", e);
+            }
+        }
+
+        // Переключение звука
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            if (masterGain) {
+                masterGain.gain.value = soundEnabled ? 0.3 : 0;
+            }
+            soundToggle.innerHTML = soundEnabled ? '🔊' : '🔇';
+            soundToggle.title = soundEnabled ? 'Выключить звук' : 'Включить звук';
+        }
+
+        // Инициализация погоды
+        function initWeather() {
+            clouds = [];
+            sunrays = [];
+            weatherParticles = [];
+            
+            // Создаем облака
+            for (let i = 0; i < 5; i++) {
+                clouds.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height * 0.4,
+                    width: 100 + Math.random() * 100,
+                    height: 40 + Math.random() * 30,
+                    speed: 0.2 + Math.random() * 0.3,
+                    opacity: 0.3 + Math.random() * 0.4
+                });
+            }
+            
+            // Создаем солнечные лучи
+            for (let i = 0; i < 8; i++) {
+                sunrays.push({
+                    angle: (i * Math.PI * 2) / 8,
+                    length: 100 + Math.random() * 50,
+                    width: 3 + Math.random() * 2,
+                    opacity: 0.2 + Math.random() * 0.3,
+                    speed: 0.01 + Math.random() * 0.02
+                });
+            }
+            
+            weatherChangeTime = Date.now();
+        }
+
+        // Смена погоды
+        function changeWeather() {
+            const weatherKeys = Object.keys(WEATHER_TYPES);
+            const currentKey = weatherKeys.find(key => WEATHER_TYPES[key] === currentWeather);
+            const nextIndex = (weatherKeys.indexOf(currentKey) + 1) % weatherKeys.length;
+            currentWeather = WEATHER_TYPES[weatherKeys[nextIndex]];
+            weatherChangeTime = Date.now();
+            
+            // Обновляем индикатор
+            weatherIndicator.textContent = currentWeather.name;
+            
+            // Адаптируем погодные эффекты
+            updateWeatherEffects();
+            
+            // Звук смены погоды
+            playSound('levelup', 440, 0.5, 0.2);
+        }
+
+        // Обновление погодных эффектов
+        function updateWeatherEffects() {
+            // Обновляем облака в зависимости от погоды
+            clouds.forEach(cloud => {
+                switch(currentWeather.name) {
+                    case "💨 Ветрено":
+                        cloud.speed = 0.8 + Math.random() * 0.4;
+                        break;
+                    case "☁️ Облачно":
+                        cloud.speed = 0.3 + Math.random() * 0.2;
+                        cloud.opacity = 0.6 + Math.random() * 0.3;
+                        break;
+                    default:
+                        cloud.speed = 0.2 + Math.random() * 0.3;
+                }
+            });
+            
+            // Добавляем частицы для снегопада
+            if (currentWeather.name === "❄️ Снегопад") {
+                for (let i = 0; i < 20; i++) {
+                    weatherParticles.push({
+                        x: Math.random() * canvas.width,
+                        y: -10,
+                        size: 2 + Math.random() * 3,
+                        speed: 1 + Math.random() * 2,
+                        sway: 0.5 + Math.random() * 0.5,
+                        opacity: 0.5 + Math.random() * 0.5
+                    });
+                }
+            }
+            
+            // Добавляем частицы для ветра
+            if (currentWeather.name === "💨 Ветрено") {
+                for (let i = 0; i < 10; i++) {
+                    weatherParticles.push({
+                        x: -20,
+                        y: Math.random() * canvas.height * 0.7,
+                        width: 30 + Math.random() * 20,
+                        height: 2,
+                        speed: 3 + Math.random() * 2,
+                        opacity: 0.3 + Math.random() * 0.2,
+                        color: '#90CAF9'
+                    });
+                }
+            }
+        }
+
+        // Обновление погодных эффектов
+        function updateWeather() {
+            const now = Date.now();
+            
+            // Смена погоды каждые 30 секунд
+            if (now - weatherChangeTime > weatherDuration) {
+                changeWeather();
+            }
+            
+            // Обновляем облака
+            clouds.forEach(cloud => {
+                cloud.x += cloud.speed * currentWeather.speedMultiplier;
+                if (cloud.x > canvas.width + cloud.width) {
+                    cloud.x = -cloud.width;
+                    cloud.y = Math.random() * canvas.height * 0.4;
+                }
+            });
+            
+            // Обновляем солнечные лучи
+            sunrays.forEach(ray => {
+                ray.angle += ray.speed;
+            });
+            
+            // Обновляем погодные частицы
+            for (let i = weatherParticles.length - 1; i >= 0; i--) {
+                const particle = weatherParticles[i];
+                
+                if (currentWeather.name === "❄️ Снегопад") {
+                    particle.y += particle.speed;
+                    particle.x += Math.sin(particle.y * 0.01) * particle.sway;
+                    
+                    if (particle.y > canvas.height) {
+                        weatherParticles.splice(i, 1);
+                    }
+                } else if (currentWeather.name === "💨 Ветрено") {
+                    particle.x += particle.speed;
+                    
+                    if (particle.x > canvas.width + 50) {
+                        weatherParticles.splice(i, 1);
+                    }
+                }
+            }
+            
+            // Добавляем новые частицы для текущей погоды
+            if (currentWeather.name === "❄️ Снегопад" && Math.random() < 0.1) {
+                weatherParticles.push({
+                    x: Math.random() * canvas.width,
+                    y: -10,
+                    size: 2 + Math.random() * 3,
+                    speed: 1 + Math.random() * 2,
+                    sway: 0.5 + Math.random() * 0.5,
+                    opacity: 0.5 + Math.random() * 0.5
+                });
+            }
+            
+            if (currentWeather.name === "💨 Ветрено" && Math.random() < 0.05) {
+                weatherParticles.push({
+                    x: -20,
+                    y: Math.random() * canvas.height * 0.7,
+                    width: 30 + Math.random() * 20,
+                    height: 2,
+                    speed: 3 + Math.random() * 2,
+                    opacity: 0.3 + Math.random() * 0.2,
+                    color: '#90CAF9'
+                });
+            }
+        }
+
+        // Отрисовка погоды
+        function drawWeather() {
+            // Фоновое затемнение/осветление
+            ctx.fillStyle = currentWeather.color;
+            ctx.globalAlpha = currentWeather.opacity;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.globalAlpha = 1;
+            
+            // Солнечные лучи (только в солнечную погоду)
+            if (currentWeather.name === "☀️ Солнечно") {
+                const centerX = canvas.width * 0.8;
+                const centerY = canvas.height * 0.2;
+                
+                sunrays.forEach(ray => {
+                    ctx.save();
+                    ctx.translate(centerX, centerY);
+                    ctx.rotate(ray.angle);
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(ray.length, 0);
+                    
+                    ctx.strokeStyle = `rgba(255, 215, 0, ${ray.opacity})`;
+                    ctx.lineWidth = ray.width;
+                    ctx.lineCap = 'round';
+                    ctx.stroke();
+                    
+                    ctx.restore();
+                });
+                
+                // Солнце
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, 40, 0, Math.PI * 2);
+                ctx.fillStyle = '#FFD700';
+                ctx.fill();
+            }
+            
+            // Облака
+            clouds.forEach(cloud => {
+                ctx.save();
+                ctx.translate(cloud.x + cloud.width/2, cloud.y + cloud.height/2);
+                
+                ctx.fillStyle = `rgba(255, 255, 255, ${cloud.opacity})`;
+                
+                // Рисуем облако из нескольких кругов
+                for (let i = 0; i < 5; i++) {
+                    const angle = (i * Math.PI * 2) / 5;
+                    const offsetX = Math.cos(angle) * cloud.width * 0.3;
+                    const offsetY = Math.sin(angle) * cloud.height * 0.3;
+                    const radius = cloud.height * 0.4 + Math.random() * 10;
+                    
+                    ctx.beginPath();
+                    ctx.arc(offsetX, offsetY, radius, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+                ctx.restore();
+            });
+            
+            // Погодные частицы
+            weatherParticles.forEach(particle => {
+                ctx.globalAlpha = particle.opacity;
+                
+                if (currentWeather.name === "❄️ Снегопад") {
+                    ctx.fillStyle = 'white';
+                    ctx.beginPath();
+                    ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (currentWeather.name === "💨 Ветрено") {
+                    ctx.fillStyle = particle.color || '#90CAF9';
+                    ctx.fillRect(particle.x, particle.y, particle.width, particle.height);
+                }
+                
+                ctx.globalAlpha = 1;
+            });
+        }
+
         // Загрузка изображений
         function loadImages() {
             const imageFiles = [
                 { key: 'background', src: 'winter_background.png' },
                 { key: 'janitor_left', src: 'janitor_left.png' },
                 { key: 'janitor_right', src: 'janitor_right.png' },
-                { key: 'snowdrift', src: 'snowdrift.png' }
+                { key: 'snowdrift', src: 'snowdrift.png' },
+                { key: 'roof', src: 'roof.png' }
             ];
 
             let loadedCount = 0;
@@ -652,6 +1054,8 @@
             player.direction = 'right';
             
             initSnowflakes();
+            initWeather();
+            initAudio();
             
             score = 0;
             lives = 3;
@@ -673,7 +1077,10 @@
             if (animationId) cancelAnimationFrame(animationId);
             gameLoop();
             
-            setTimeout(() => createSnowdrift(), 1000);
+            // Первые сугробы падают чуть ниже персонажа
+            setTimeout(() => createSnowdrift(true), 500);
+            setTimeout(() => createSnowdrift(true), 1500);
+            setTimeout(() => createSnowdrift(true), 2500);
             
             // Показываем подсказку про клавиатуру для ПК
             if (!isMobile()) {
@@ -687,13 +1094,13 @@
         }
 
         // Создание сугроба
-        function createSnowdrift() {
+        function createSnowdrift(isFirst = false) {
             if (gameState !== 'playing') return;
             
             const now = Date.now();
             const settings = LEVEL_SETTINGS[level];
             
-            if (now - lastSnowdriftTime < settings.snowdriftInterval) return;
+            if (!isFirst && now - lastSnowdriftTime < settings.snowdriftInterval) return;
             
             // Проверяем вертикальное переполнение
             if (checkVerticalOverflow()) {
@@ -731,9 +1138,9 @@
                     }
                 }
                 
-                // Первый сугроб падает чуть ниже уровня персонажа
-                if (snowdrifts.length === 0) {
-                    y = maxY - 70; // Чуть ниже персонажа
+                // Первые сугробы падают чуть ниже уровня персонажа
+                if (isFirst) {
+                    y = player.y + player.height + 20; // Чуть ниже персонажа
                 } else {
                     y = maxY - 70; // Отступаем вверх
                 }
@@ -752,9 +1159,9 @@
                 width: 70,
                 height: 50,
                 word: wordData,
-                speed: settings.snowdriftSpeed * (0.8 + Math.random() * 0.4),
+                speed: settings.snowdriftSpeed * (0.8 + Math.random() * 0.4) * currentWeather.speedMultiplier,
                 collected: false,
-                onGround: false,
+                onGround: isFirst, // Первые сугробы сразу на земле
                 id: Date.now(),
                 rotation: 0,
                 rotationSpeed: (Math.random() - 0.5) * 0.05,
@@ -771,8 +1178,19 @@
                 }
             }
             
+            // Если это первый сугроб, он сразу на земле
+            if (isFirst) {
+                snowdrift.y = snowdrift.targetY;
+                snowdrift.onGround = true;
+            }
+            
             snowdrifts.push(snowdrift);
             lastSnowdriftTime = now;
+            
+            // Звук падения сугроба
+            if (!isFirst) {
+                playSound('collect', 200, 0.1, 0.1);
+            }
         }
 
         // Проверка вертикального переполнения
@@ -794,9 +1212,9 @@
                     x: Math.random() * canvas.width,
                     y: Math.random() * canvas.height,
                     size: Math.random() * 2 + 1,
-                    speed: Math.random() * 1 + 0.5,
-                    sway: Math.random() * 0.3,
-                    opacity: Math.random() * 0.3 + 0.3
+                    speed: Math.random() * 1 + 0.5 * currentWeather.speedMultiplier,
+                    sway: 0.3 + Math.random() * 0.3,
+                    opacity: 0.3 + Math.random() * 0.3
                 });
             }
         }
@@ -810,6 +1228,7 @@
             updateExplodingSnowdrifts();
             updateParticles();
             updateConfetti();
+            updateWeather();
             
             const now = Date.now();
             if (now - lastSnowdriftTime > LEVEL_SETTINGS[level].snowdriftInterval) {
@@ -821,7 +1240,7 @@
         function updateSnowflakes() {
             snowflakes.forEach(flake => {
                 flake.y += flake.speed;
-                flake.x += Math.sin(flake.y * 0.01) * flake.sway;
+                flake.x += Math.sin(flake.y * 0.01) * flake.sway * currentWeather.speedMultiplier;
                 
                 if (flake.y > canvas.height) {
                     flake.y = -10;
@@ -842,7 +1261,7 @@
                     snowdrift.wobble += snowdrift.wobbleSpeed;
                     
                     // Небольшое качание при падении
-                    snowdrift.x += Math.sin(snowdrift.wobble) * 0.5;
+                    snowdrift.x += Math.sin(snowdrift.wobble) * 0.5 * currentWeather.speedMultiplier;
                     
                     if (snowdrift.y >= snowdrift.targetY) {
                         snowdrift.y = snowdrift.targetY;
@@ -880,7 +1299,7 @@
                     // Сугроб находится в том же столбце и выше удаленного
                     snowdrift.targetY = deletedSnowdrift.y;
                     snowdrift.onGround = false;
-                    snowdrift.speed = LEVEL_SETTINGS[level].snowdriftSpeed * 0.5;
+                    snowdrift.speed = LEVEL_SETTINGS[level].snowdriftSpeed * 0.5 * currentWeather.speedMultiplier;
                 }
             }
         }
@@ -916,6 +1335,9 @@
                     rotationSpeed: (Math.random() - 0.5) * 10
                 });
             }
+            
+            // Звук взрыва
+            playSound('explode', 100, 0.3, 0.2);
         }
 
         // Проверка столкновения
@@ -934,6 +1356,9 @@
             currentSnowdriftId = snowdrift.id;
             currentSelection = new Array(currentWord.correct.length).fill(null);
             currentMissingIndex = 0;
+            
+            // Звук столкновения
+            playSound('collect', 300, 0.1, 0.2);
             
             showWordPopup();
         }
@@ -997,6 +1422,7 @@
                 feedbackElement.className = 'correct';
                 createParticles('#4CAF50', canvas.width/2, canvas.height/2);
                 createWordCompleted('✓', '#4CAF50');
+                playSound('correct', 523.25, 0.2, 0.3);
                 
                 currentMissingIndex++;
                 
@@ -1009,6 +1435,7 @@
                 feedbackElement.className = 'wrong';
                 createParticles('#FF5252', canvas.width/2, canvas.height/2);
                 createWordCompleted('✗', '#FF5252');
+                playSound('wrong', 392, 0.2, 0.3);
                 loseLife();
                 combo = 0;
                 updateCombo();
@@ -1048,6 +1475,7 @@
                 
                 createParticles('#FFD700', canvas.width/2, canvas.height/2);
                 createConfetti();
+                playSound('levelup', 440, 0.5, 0.2);
                 
                 // Находим и удаляем сугроб с анимацией разлета
                 const index = snowdrifts.findIndex(s => s.id === currentSnowdriftId);
@@ -1211,7 +1639,9 @@
             
             createLevelTransition();
             
-            setTimeout(() => createSnowdrift(), 1000);
+            setTimeout(() => createSnowdrift(true), 500);
+            setTimeout(() => createSnowdrift(true), 1500);
+            setTimeout(() => createSnowdrift(true), 2500);
         }
 
         // Эффект перехода уровня
@@ -1226,6 +1656,8 @@
             setTimeout(() => {
                 levelBadge.style.animation = 'pulse 2s infinite';
             }, 100);
+            
+            playSound('levelup', 523.25, 1, 0.3);
         }
 
         // Создание частиц
@@ -1340,6 +1772,21 @@
                 gradient.addColorStop(1, '#3949ab');
                 ctx.fillStyle = gradient;
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+            
+            // Погодные эффекты
+            drawWeather();
+            
+            // Крыша (если загружена)
+            if (images.roof) {
+                const roofAspectRatio = 1.5;
+                const roofWidth = canvas.width * 0.7;
+                const roofHeight = roofWidth / roofAspectRatio;
+                const roofX = canvas.width/2 - roofWidth/2;
+                const roofY = canvas.height - roofHeight - 50;
+                ctx.globalAlpha = 0.8; // Полупрозрачная крыша
+                ctx.drawImage(images.roof, roofX, roofY, roofWidth, roofHeight);
+                ctx.globalAlpha = 1;
             }
             
             // Снежинки
@@ -1529,6 +1976,7 @@
         // Управление игроком
         let touchStartX = 0;
         let isDragging = false;
+        let lastPlayerMove = 0;
 
         canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
@@ -1546,6 +1994,12 @@
             touchStartX = touch.clientX;
             
             player.x += deltaX * 1.5;
+            
+            // Звук движения
+            if (Date.now() - lastPlayerMove > 200) {
+                playSound('move', 100, 0.05, 0.1);
+                lastPlayerMove = Date.now();
+            }
             
             // Обновляем направление игрока
             if (deltaX > 0) {
@@ -1573,12 +2027,20 @@
                     case 'A':
                         player.x = Math.max(0, player.x - speed);
                         player.direction = 'left';
+                        if (Date.now() - lastPlayerMove > 200) {
+                            playSound('move', 100, 0.05, 0.1);
+                            lastPlayerMove = Date.now();
+                        }
                         break;
                     case 'ArrowRight':
                     case 'd':
                     case 'D':
                         player.x = Math.min(canvas.width - player.width, player.x + speed);
                         player.direction = 'right';
+                        if (Date.now() - lastPlayerMove > 200) {
+                            playSound('move', 100, 0.05, 0.1);
+                            lastPlayerMove = Date.now();
+                        }
                         break;
                 }
             }
@@ -1617,6 +2079,9 @@
             level = 1;
             initGame();
         });
+
+        // Переключение звука
+        soundToggle.addEventListener('click', toggleSound);
 
         // Обработка изменения размера окна
         window.addEventListener('resize', resizeCanvas);

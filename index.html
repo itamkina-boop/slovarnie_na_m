@@ -483,7 +483,6 @@
             janitor_left: null,
             janitor_right: null,
             snowdrift: null,
-            roof: null,
             backgrounds: []
         };
 
@@ -509,7 +508,6 @@
                 { key: 'janitor_left', src: 'janitor_left.png' },
                 { key: 'janitor_right', src: 'janitor_right.png' },
                 { key: 'snowdrift', src: 'snowdrift.png' },
-                { key: 'roof', src: 'roof.png' },
                 ...LOCATIONS.map((loc, i) => ({ 
                     key: `bg_${i}`, 
                     src: loc.bg,
@@ -1211,19 +1209,6 @@
                 ctx.beginPath();
                 ctx.arc(player.x + player.width/2, player.y + 40, 25, 0, Math.PI * 2);
                 ctx.fill();
-            }
-            
-            // Рисуем крышу (если есть)
-            if (images.roof && Math.random() > 0.7) {
-                ctx.globalAlpha = 0.8;
-                ctx.drawImage(
-                    images.roof,
-                    canvas.width - 200,
-                    canvas.height - 250,
-                    200,
-                    150
-                );
-                ctx.globalAlpha = 1;
             }
         }
 

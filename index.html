@@ -85,37 +85,34 @@
             50% { transform: translateY(-10px); }
         }
         
-        #wordPopup {
+        #wordDisplay {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.95);
-            padding: 30px;
-            border-radius: 20px;
-            border: 4px solid #4CAF50;
-            z-index: 200;
-            width: 90%;
-            max-width: 500px;
-            display: none;
-            box-shadow: 0 0 40px rgba(76, 175, 80, 0.5);
+            font-size: 64px;
             text-align: center;
-        }
-        
-        #wordDisplay {
-            font-size: 48px;
-            text-align: center;
-            margin: 20px 0;
             min-height: 60px;
             letter-spacing: 2px;
             font-weight: bold;
             font-family: 'Georgia', serif;
-            text-shadow: 2px 2px 0 #000;
+            text-shadow: 
+                2px 2px 0 #000,
+                2px -2px 0 #000,
+                -2px 2px 0 #000,
+                -2px -2px 0 #000,
+                2px 0px 0 #000,
+                0px 2px 0 #000,
+                -2px 0px 0 #000,
+                0px -2px 0 #000;
+            z-index: 200;
+            display: none;
+            pointer-events: none;
         }
         
         .word-char {
             display: inline-block;
-            margin: 0 2px;
+            margin: 0 5px;
             position: relative;
         }
         
@@ -124,37 +121,62 @@
             position: absolute;
             left: -2px;
             right: -2px;
-            bottom: -5px;
-            height: 3px;
-            background: #4CAF50;
+            bottom: -8px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.7);
             border-radius: 2px;
-            opacity: 0.5;
+            opacity: 0.8;
         }
         
         .missing-char {
             color: #2196F3;
-            animation: pulse 1s infinite;
+            animation: pulse 1.5s infinite;
             text-decoration: underline;
-            text-decoration-thickness: 3px;
-            text-underline-offset: 5px;
+            text-decoration-thickness: 4px;
+            text-underline-offset: 10px;
         }
         
         .correct-char {
             color: #4CAF50;
-            text-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+            text-shadow: 
+                2px 2px 0 #000,
+                2px -2px 0 #000,
+                -2px 2px 0 #000,
+                -2px -2px 0 #000,
+                2px 0px 0 #000,
+                0px 2px 0 #000,
+                -2px 0px 0 #000,
+                0px -2px 0 #000,
+                0 0 15px rgba(76, 175, 80, 0.8);
         }
         
         .wrong-char {
             color: #FF5252;
-            text-shadow: 0 0 10px rgba(255, 82, 82, 0.5);
+            text-shadow: 
+                2px 2px 0 #000,
+                2px -2px 0 #000,
+                -2px 2px 0 #000,
+                -2px -2px 0 #000,
+                2px 0px 0 #000,
+                0px 2px 0 #000,
+                -2px 0px 0 #000,
+                0px -2px 0 #000,
+                0 0 15px rgba(255, 82, 82, 0.8);
         }
         
         #feedback {
-            font-size: 24px;
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 36px;
             text-align: center;
             min-height: 40px;
-            margin: 15px 0;
+            z-index: 201;
             transition: all 0.3s;
+            display: none;
+            pointer-events: none;
+            text-shadow: 3px 3px 0 #000;
         }
         
         .correct { 
@@ -168,9 +190,9 @@
         }
         
         @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
+            0%, 100% { transform: translate(-50%, -50%) translateX(0); }
+            25% { transform: translate(-50%, -50%) translateX(-5px); }
+            75% { transform: translate(-50%, -50%) translateX(5px); }
         }
         
         #celebration {
@@ -263,16 +285,17 @@
         
         .word-completed {
             position: absolute;
-            font-size: 40px;
+            font-size: 60px;
             font-weight: bold;
             z-index: 50;
             pointer-events: none;
             animation: floatUp 2s ease-out forwards;
+            text-shadow: 2px 2px 0 #000;
         }
         
         @keyframes floatUp {
             0% { transform: translateY(0) scale(1); opacity: 1; }
-            100% { transform: translateY(-100px) scale(0.5); opacity: 0; }
+            100% { transform: translateY(-150px) scale(0.5); opacity: 0; }
         }
         
         #comboCounter {
@@ -359,36 +382,36 @@
         /* Мобильная клавиатура */
         #mobileKeyboard {
             position: fixed;
-            bottom: 0;
+            top: 0;
             left: 0;
             width: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            padding: 10px;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 15px;
             display: none;
             flex-wrap: wrap;
             justify-content: center;
-            gap: 5px;
+            gap: 8px;
             z-index: 300;
             backdrop-filter: blur(10px);
-            border-top: 2px solid #4CAF50;
+            border-bottom: 3px solid #4CAF50;
         }
         
         .keyboard-row {
             display: flex;
             justify-content: center;
-            gap: 5px;
+            gap: 8px;
             width: 100%;
-            margin: 5px 0;
+            margin: 8px 0;
         }
         
         .vowel-key {
-            width: 50px;
-            height: 50px;
+            width: 55px;
+            height: 55px;
             background: linear-gradient(135deg, #2196F3, #1976D2);
-            border: 2px solid white;
-            border-radius: 10px;
+            border: 3px solid white;
+            border-radius: 12px;
             color: white;
-            font-size: 22px;
+            font-size: 26px;
             font-weight: bold;
             display: flex;
             align-items: center;
@@ -396,22 +419,23 @@
             cursor: pointer;
             user-select: none;
             transition: all 0.2s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
         }
         
         .vowel-key:hover, .vowel-key:active {
             transform: scale(0.95);
             background: linear-gradient(135deg, #1976D2, #1565C0);
-            box-shadow: 0 0 10px rgba(33, 150, 243, 0.5);
+            box-shadow: 0 0 15px rgba(33, 150, 243, 0.7);
         }
         
         .action-key {
-            width: 100px;
-            height: 50px;
+            width: 120px;
+            height: 55px;
             background: linear-gradient(135deg, #4CAF50, #2E7D32);
-            border: 2px solid white;
-            border-radius: 10px;
+            border: 3px solid white;
+            border-radius: 12px;
             color: white;
-            font-size: 16px;
+            font-size: 18px;
             font-weight: bold;
             display: flex;
             align-items: center;
@@ -419,12 +443,13 @@
             cursor: pointer;
             user-select: none;
             transition: all 0.2s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
         }
         
         .action-key:hover, .action-key:active {
             transform: scale(0.95);
             background: linear-gradient(135deg, #2E7D32, #1B5E20);
-            box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+            box-shadow: 0 0 15px rgba(76, 175, 80, 0.7);
         }
         
         .delete-key {
@@ -433,12 +458,12 @@
         
         .delete-key:hover, .delete-key:active {
             background: linear-gradient(135deg, #D32F2F, #C62828);
-            box-shadow: 0 0 10px rgba(255, 82, 82, 0.5);
+            box-shadow: 0 0 15px rgba(255, 82, 82, 0.7);
         }
         
         @media (max-width: 768px) {
             #ui {
-                top: 10px;
+                top: 100px; /* Смещаем ниже из-за клавиатуры сверху */
                 left: 10px;
                 right: 10px;
             }
@@ -454,19 +479,25 @@
             }
             
             #wordDisplay {
-                font-size: 36px;
+                font-size: 48px;
+                top: 55%; /* Ниже из-за клавиатуры сверху */
+            }
+            
+            #feedback {
+                font-size: 28px;
+                top: 45%; /* Выше слова */
             }
             
             .vowel-key {
-                width: 40px;
-                height: 40px;
-                font-size: 18px;
+                width: 45px;
+                height: 45px;
+                font-size: 22px;
             }
             
             .action-key {
-                width: 80px;
-                height: 40px;
-                font-size: 14px;
+                width: 100px;
+                height: 45px;
+                font-size: 16px;
             }
             
             .celebration-text {
@@ -495,23 +526,49 @@
                 max-height: 150px;
                 font-size: 12px;
             }
+            
+            .word-completed {
+                font-size: 50px;
+            }
         }
         
         @media (max-width: 480px) {
             #wordDisplay {
-                font-size: 28px;
+                font-size: 36px;
+            }
+            
+            #feedback {
+                font-size: 24px;
             }
             
             .vowel-key {
-                width: 35px;
-                height: 35px;
-                font-size: 16px;
+                width: 40px;
+                height: 40px;
+                font-size: 20px;
             }
             
             .action-key {
-                width: 70px;
-                height: 35px;
-                font-size: 12px;
+                width: 90px;
+                height: 40px;
+                font-size: 14px;
+            }
+            
+            .word-completed {
+                font-size: 40px;
+            }
+        }
+        
+        @media (max-height: 600px) {
+            #wordDisplay {
+                font-size: 32px;
+            }
+            
+            #feedback {
+                font-size: 20px;
+            }
+            
+            #ui {
+                top: 90px;
             }
         }
     </style>
@@ -561,10 +618,9 @@
             <div id="dictionaryWords"></div>
         </div>
         
-        <div id="wordPopup">
-            <div id="wordDisplay"></div>
-            <div id="feedback"></div>
-        </div>
+        <!-- Слово без плашки -->
+        <div id="wordDisplay"></div>
+        <div id="feedback"></div>
         
         <!-- Мобильная клавиатура -->
         <div id="mobileKeyboard">
@@ -688,7 +744,7 @@
         let currentMissingIndex = 0;
         let snowflakes = [];
         let particles = [];
-        let player = { x: 0, y: 0, width: 120, height: 180, direction: 'right' }; // Увеличили размер
+        let player = { x: 0, y: 0, width: 120, height: 180, direction: 'right' };
         let snowdrifts = [];
         let animationId = null;
         let allWordsCompleted = false;
@@ -703,6 +759,7 @@
             background: null,
             janitor_left: null,
             janitor_right: null,
+            roof: null,
             snowdrift: null
         };
 
@@ -719,7 +776,6 @@
         const levelInfo = document.getElementById('levelInfo');
         const levelBadge = document.getElementById('levelBadge');
         const dictionaryWords = document.getElementById('dictionaryWords');
-        const wordPopup = document.getElementById('wordPopup');
         const wordDisplay = document.getElementById('wordDisplay');
         const feedbackElement = document.getElementById('feedback');
         const mobileKeyboard = document.getElementById('mobileKeyboard');
@@ -739,6 +795,7 @@
                 { key: 'background', src: 'winter_background.png' },
                 { key: 'janitor_left', src: 'janitor_left.png' },
                 { key: 'janitor_right', src: 'janitor_right.png' },
+                { key: 'roof', src: 'roof.png' },
                 { key: 'snowdrift', src: 'snowdrift.png' }
             ];
 
@@ -797,7 +854,7 @@
             resizeCanvas();
             
             player.x = canvas.width / 2 - player.width / 2;
-            player.y = canvas.height - player.height - 20; // Ниже, чтобы стоял на земле
+            player.y = canvas.height - player.height - 20;
             player.direction = 'right';
             
             initSnowflakes();
@@ -928,7 +985,7 @@
             
             const snowdrift = {
                 x: x,
-                y: -70, // Начинаем сверху
+                y: -70,
                 width: 70,
                 height: 50,
                 word: wordData,
@@ -940,13 +997,13 @@
                 rotationSpeed: (Math.random() - 0.5) * 0.05,
                 wobble: Math.random() * Math.PI * 2,
                 wobbleSpeed: 0.03 + Math.random() * 0.02,
-                targetY: canvas.height - 70 // Целевая позиция в самом низу
+                targetY: canvas.height - 70
             };
             
             // Если есть сугроб в этом столбце, корректируем targetY выше
             for (const other of snowdrifts) {
                 if (Math.abs(other.x - x) < 60 && other.onGround) {
-                    snowdrift.targetY = other.y - 60; // Ставим на предыдущий сугроб
+                    snowdrift.targetY = other.y - 60;
                     break;
                 }
             }
@@ -1018,7 +1075,7 @@
                         snowdrift.onGround = true;
                         snowdrift.speed = 0;
                         snowdrift.rotationSpeed = 0;
-                        snowdrift.wobbleSpeed = 0.01; // Медленное качание на земле
+                        snowdrift.wobbleSpeed = 0.01;
                     }
                     
                     if (checkCollision(player, snowdrift)) {
@@ -1047,7 +1104,7 @@
                 particle.x += particle.vx;
                 particle.y += particle.vy;
                 particle.life -= 0.02;
-                particle.vy += 0.1; // Гравитация
+                particle.vy += 0.1;
                 
                 if (particle.life <= 0) {
                     explodingSnowdrifts.splice(i, 1);
@@ -1076,10 +1133,8 @@
             for (let i = 0; i < snowdrifts.length; i++) {
                 if (Math.abs(snowdrifts[i].x - snowdrift.x) < 60 && 
                     snowdrifts[i].y < snowdrift.y) {
-                    // Плавно опускаем сугроб вниз
                     snowdrifts[i].targetY += 60;
                     
-                    // Если сугроб уже на земле, начинаем движение
                     if (snowdrifts[i].onGround) {
                         snowdrifts[i].onGround = false;
                         snowdrifts[i].speed = LEVEL_SETTINGS[level].snowdriftSpeed;
@@ -1110,7 +1165,7 @@
 
         // Показ попапа со словом
         function showWordPopup() {
-            wordPopup.style.display = 'block';
+            wordDisplay.style.display = 'block';
             updateWordDisplay();
             
             // Показываем мобильную клавиатуру на мобильных устройствах
@@ -1121,7 +1176,8 @@
 
         // Скрытие попапа
         function hideWordPopup() {
-            wordPopup.style.display = 'none';
+            wordDisplay.style.display = 'none';
+            feedbackElement.style.display = 'none';
             feedbackElement.textContent = '';
             feedbackElement.className = '';
             currentWord = null;
@@ -1178,6 +1234,7 @@
             if (isCorrect) {
                 feedbackElement.textContent = '✓ Правильно!';
                 feedbackElement.className = 'correct';
+                feedbackElement.style.display = 'block';
                 createParticles('#4CAF50', canvas.width/2, canvas.height/2);
                 createWordCompleted('✓', '#4CAF50');
                 
@@ -1189,6 +1246,7 @@
             } else {
                 feedbackElement.textContent = '✗ Неправильно';
                 feedbackElement.className = 'wrong';
+                feedbackElement.style.display = 'block';
                 createParticles('#FF5252', canvas.width/2, canvas.height/2);
                 createWordCompleted('✗', '#FF5252');
                 loseLife();
@@ -1510,16 +1568,24 @@
             
             // Отрисовка фона
             if (images.background) {
-                // Рисуем фон на весь экран
                 ctx.drawImage(images.background, 0, 0, canvas.width, canvas.height);
             } else {
-                // Запасной вариант - градиент
                 const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
                 gradient.addColorStop(0, '#1a237e');
                 gradient.addColorStop(0.5, '#283593');
                 gradient.addColorStop(1, '#3949ab');
                 ctx.fillStyle = gradient;
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+            
+            // Крыша внизу
+            if (images.roof) {
+                const roofAspectRatio = 1.5;
+                const roofWidth = canvas.width * 0.7;
+                const roofHeight = roofWidth / roofAspectRatio;
+                const roofX = canvas.width/2 - roofWidth/2;
+                const roofY = canvas.height - roofHeight - 20;
+                ctx.drawImage(images.roof, roofX, roofY, roofWidth, roofHeight);
             }
             
             // Снежинки
@@ -1532,17 +1598,12 @@
             });
             ctx.globalAlpha = 1;
             
-            // Земля (снег)
-            ctx.fillStyle = '#E3F2FD';
-            ctx.fillRect(0, canvas.height - 30, canvas.width, 30);
-            
             // Игрок (дворник)
             let playerImage = player.direction === 'left' ? images.janitor_left : images.janitor_right;
             if (playerImage) {
                 const walkOffset = Math.sin(Date.now() * 0.005) * 3;
                 ctx.drawImage(playerImage, player.x, player.y + walkOffset, player.width, player.height);
             } else {
-                // Запасной вариант
                 ctx.fillStyle = player.direction === 'left' ? '#FF5722' : '#FF9800';
                 ctx.fillRect(player.x, player.y, player.width, player.height);
             }
@@ -1563,7 +1624,6 @@
                         particle.height
                     );
                 } else {
-                    // Запасной вариант
                     ctx.fillStyle = '#FFFFFF';
                     ctx.fillRect(-particle.width/2, -particle.height/2, particle.width, particle.height);
                 }
@@ -1589,7 +1649,6 @@
                     
                     ctx.restore();
                 } else {
-                    // Запасной вариант
                     ctx.save();
                     ctx.translate(snowdrift.x + snowdrift.width/2, snowdrift.y + snowdrift.height/2);
                     ctx.rotate(snowdrift.rotation);
@@ -1674,7 +1733,6 @@
                 return;
             }
             
-            // Сортируем слова по алфавиту
             const sortedWords = Array.from(learnedWords.entries()).sort((a, b) => 
                 a[1].word.localeCompare(b[1].word)
             );
@@ -1727,7 +1785,6 @@
             
             player.x += deltaX * 1.5;
             
-            // Обновляем направление игрока
             if (deltaX > 0) {
                 player.direction = 'right';
             } else if (deltaX < 0) {
@@ -1744,7 +1801,6 @@
         // Управление с клавиатуры
         document.addEventListener('keydown', (e) => {
             if (gameState === 'playing') {
-                // Управление дворником
                 const speed = 20;
                 
                 switch(e.key) {
@@ -1764,7 +1820,6 @@
             }
             
             if (currentWord !== null) {
-                // Ввод букв с клавиатуры в мини-игре
                 const key = e.key.toLowerCase();
                 const russianVowels = 'аеёиоуыэюя';
                 
@@ -1772,7 +1827,6 @@
                     selectLetter(key);
                     e.preventDefault();
                 } else if (e.key === 'Backspace') {
-                    // Удаление последней буквы
                     if (currentMissingIndex > 0) {
                         currentMissingIndex--;
                         currentSelection[currentMissingIndex] = null;
@@ -1780,7 +1834,6 @@
                     }
                     e.preventDefault();
                 } else if (e.key === 'Enter') {
-                    // Завершение слова досрочно
                     if (currentMissingIndex >= currentWord.correct.length) {
                         completeWord(true);
                     }

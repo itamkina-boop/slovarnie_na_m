@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -119,51 +120,64 @@
             75% { transform: translateX(5px); }
         }
         
+        /* ОБНОВЛЕННАЯ МОБИЛЬНАЯ КЛАВИАТУРА */
         #mobileKeyboard {
             position: fixed;
-            bottom: 0;
+            top: 10px;
             left: 0;
             width: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            backdrop-filter: blur(20px);
-            border-top: 3px solid #4CAF50;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            border-bottom: 2px solid #4CAF50;
             z-index: 300;
             display: none;
-            padding: 15px 0;
+            padding: 8px 0;
+            border-radius: 0 0 15px 15px;
+        }
+        
+        .keyboard-title {
+            text-align: center;
+            font-size: 12px;
+            color: #4CAF50;
+            margin-bottom: 5px;
+            opacity: 0.8;
         }
         
         .keyboard-row {
             display: flex;
             justify-content: center;
-            gap: 8px;
-            margin: 8px 0;
-            padding: 0 10px;
+            gap: 4px;
+            margin: 4px 0;
+            padding: 0 5px;
         }
         
         .keyboard-key {
             background: linear-gradient(45deg, #2196F3, #1976D2);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
             color: white;
-            font-size: 22px;
+            font-size: 16px;
             font-weight: bold;
-            width: 50px;
-            height: 50px;
+            width: 32px;
+            height: 32px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             transition: all 0.2s;
             touch-action: manipulation;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
         
         .keyboard-key:active {
-            transform: scale(0.95);
+            transform: scale(0.9);
+            background: linear-gradient(45deg, #1976D2, #1565C0);
         }
         
         .keyboard-backspace {
-            width: 100px;
+            width: 70px;
             background: linear-gradient(45deg, #FF5252, #D32F2F);
+            font-size: 14px;
         }
         
         #locationIndicator {
@@ -279,7 +293,7 @@
             }
             
             #locationIndicator {
-                top: 10px;
+                top: 60px; /* Смещаем ниже клавиатуры */
                 right: 10px;
                 font-size: 14px;
                 padding: 8px 12px;
@@ -298,6 +312,19 @@
             
             .loading-bar {
                 width: 250px;
+            }
+            
+            /* Адаптивная клавиатура для очень маленьких экранов */
+            @media (max-width: 360px) {
+                .keyboard-key {
+                    width: 28px;
+                    height: 28px;
+                    font-size: 14px;
+                }
+                
+                .keyboard-backspace {
+                    width: 60px;
+                }
             }
         }
         
@@ -338,52 +365,23 @@
             <div id="feedback"></div>
         </div>
         
+        <!-- ОБНОВЛЕННАЯ КЛАВИАТУРА ТОЛЬКО С ГЛАСНЫМИ -->
         <div id="mobileKeyboard">
+            <div class="keyboard-title">Введите гласные буквы:</div>
             <div class="keyboard-row">
                 <div class="keyboard-key" data-letter="а">А</div>
-                <div class="keyboard-key" data-letter="б">Б</div>
-                <div class="keyboard-key" data-letter="в">В</div>
-                <div class="keyboard-key" data-letter="г">Г</div>
-                <div class="keyboard-key" data-letter="д">Д</div>
                 <div class="keyboard-key" data-letter="е">Е</div>
-            </div>
-            <div class="keyboard-row">
                 <div class="keyboard-key" data-letter="ё">Ё</div>
-                <div class="keyboard-key" data-letter="ж">Ж</div>
-                <div class="keyboard-key" data-letter="з">З</div>
                 <div class="keyboard-key" data-letter="и">И</div>
-                <div class="keyboard-key" data-letter="й">Й</div>
-                <div class="keyboard-key" data-letter="к">К</div>
-            </div>
-            <div class="keyboard-row">
-                <div class="keyboard-key" data-letter="л">Л</div>
-                <div class="keyboard-key" data-letter="м">М</div>
-                <div class="keyboard-key" data-letter="н">Н</div>
                 <div class="keyboard-key" data-letter="о">О</div>
-                <div class="keyboard-key" data-letter="п">П</div>
-                <div class="keyboard-key" data-letter="р">Р</div>
-            </div>
-            <div class="keyboard-row">
-                <div class="keyboard-key" data-letter="с">С</div>
-                <div class="keyboard-key" data-letter="т">Т</div>
                 <div class="keyboard-key" data-letter="у">У</div>
-                <div class="keyboard-key" data-letter="ф">Ф</div>
-                <div class="keyboard-key" data-letter="х">Х</div>
-                <div class="keyboard-key" data-letter="ц">Ц</div>
             </div>
             <div class="keyboard-row">
-                <div class="keyboard-key" data-letter="ч">Ч</div>
-                <div class="keyboard-key" data-letter="ш">Ш</div>
-                <div class="keyboard-key" data-letter="щ">Щ</div>
-                <div class="keyboard-key" data-letter="ъ">Ъ</div>
                 <div class="keyboard-key" data-letter="ы">Ы</div>
-                <div class="keyboard-key" data-letter="ь">Ь</div>
-            </div>
-            <div class="keyboard-row">
                 <div class="keyboard-key" data-letter="э">Э</div>
                 <div class="keyboard-key" data-letter="ю">Ю</div>
                 <div class="keyboard-key" data-letter="я">Я</div>
-                <div class="keyboard-key keyboard-backspace" data-letter="backspace">←</div>
+                <div class="keyboard-key keyboard-backspace" data-letter="backspace">← Удалить</div>
             </div>
         </div>
         
@@ -809,7 +807,7 @@
             }
         }
 
-        // Обновление снежинок
+        // Обновление снежинки
         function updateSnowflakes() {
             snowflakes.forEach(flake => {
                 flake.y += flake.speed;
@@ -865,6 +863,8 @@
             // На мобильных показываем клавиатуру
             if (isMobile()) {
                 mobileKeyboard.style.display = 'block';
+                // Поднимаем индикатор локации выше, чтобы не перекрывался
+                locationIndicator.style.top = '80px';
             }
         }
 
@@ -884,6 +884,8 @@
             
             if (isMobile()) {
                 mobileKeyboard.style.display = 'none';
+                // Возвращаем индикатор локации на место
+                locationIndicator.style.top = '20px';
             }
         }
 
@@ -1097,6 +1099,9 @@
             }
             
             celebration.style.display = 'flex';
+            
+            // Скрываем клавиатуру если была открыта
+            mobileKeyboard.style.display = 'none';
         }
 
         // Обновление UI
@@ -1264,9 +1269,9 @@
             // Управление вводом букв
             if (currentWord && gamePaused) {
                 const key = e.key.toLowerCase();
-                const russianLetters = 'абвгдеёжзийклмнопрстуфхцчшщъыьэюя';
+                const russianVowels = 'аеёиоуыэюя'; // Только гласные
                 
-                if (russianLetters.includes(key)) {
+                if (russianVowels.includes(key)) {
                     selectLetter(key);
                     e.preventDefault();
                 } else if (e.key === 'Backspace') {

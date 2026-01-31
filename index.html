@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -475,14 +474,20 @@
         let snowflakes = [];
         let currentLocation = 0;
         let cameraX = 0;
-        const worldWidth = 4000;
-        let gamePaused = false;
-
+        
+        // НОВЫЕ ПЕРЕМЕННЫЕ ДЛЯ СИСТЕМЫ ФОНОВ
+        let currentBackgroundImage = 0;
+        let backgrounds = []; // Массив фонов
+        let backgroundWidth = 800; // Ширина каждого фонового изображения
+        let backgroundChangeThreshold = 100; // Расстояние от края для смены фона
+        const worldWidth = 8000; // Увеличиваем общую ширину мира
+        
         // Загруженные изображения
         const images = {
             janitor_left: null,
             janitor_right: null,
             snowdrift: null,
+            roof: null,
             backgrounds: []
         };
 
@@ -508,6 +513,7 @@
                 { key: 'janitor_left', src: 'janitor_left.png' },
                 { key: 'janitor_right', src: 'janitor_right.png' },
                 { key: 'snowdrift', src: 'snowdrift.png' },
+                { key: 'roof', src: 'roof.png' },
                 ...LOCATIONS.map((loc, i) => ({ 
                     key: `bg_${i}`, 
                     src: loc.bg,
@@ -609,6 +615,131 @@
             });
         }
 
+        // НОВАЯ ФУНКЦИЯ: Инициализация фонов
+        function initBackgrounds() {
+            backgrounds = [];
+            // Создаем 10 фоновых изображений
+            for (let i = 0; i < 10; i++) {
+                backgrounds.push({
+                    image: images.backgrounds[i % images.backgrounds.length], // Циклично используем загруженные фоны
+                    x: i * backgroundWidth,
+                    id: i,
+                    location: LOCATIONS[i % LOCATIONS.length]
+                });
+            }
+        }
+
+        // НОВАЯ ФУНКЦИЯ: Обновление фона (проверка смены)
+        function updateBackground() {
+            const worldPlayerX = cameraX + player.x;
+            const currentBg = backgrounds[currentBackgroundImage];
+            const currentBgRightEdge = currentBg.x + backgroundWidth;
+            
+            // Проверяем, подошел ли персонаж к правому краю текущего фона
+            if (worldPlayerX > currentBgRightEdge - backgroundChangeThreshold) {
+                // Переключаемся на следующий фон
+                if (currentBackgroundImage < backgrounds.length - 1) {
+                    currentBackgroundImage++;
+                    
+                    // Плавная смена локации в индикаторе
+                    locationIndicator.textContent = backgrounds[currentBackgroundImage].location.name;
+                    
+                    // Эффект смены фона (частицы)
+                    createParticles('#4CAF50', canvas.width/2, canvas.height/2, 20);
+                    
+                    // Мягкое перемещение камеры к центру нового фона
+                    const targetCameraX = backgrounds[currentBackgroundImage].x + backgroundWidth/2 - canvas.width/2;
+                    cameraX = targetCameraX;
+                    
+                    // Также создаем новые сугробы в новой локации
+                    createSnowdriftsForCurrentBackground();
+                }
+            }
+            
+            // Проверяем, подошел ли персонаж к левому краю текущего фона
+            if (worldPlayerX < currentBg.x + backgroundChangeThreshold && currentBackgroundImage > 0) {
+                // Переключаемся на предыдущий фон
+                currentBackgroundImage--;
+                
+                // Плавная смена локации в индикаторе
+                locationIndicator.textContent = backgrounds[currentBackgroundImage].location.name;
+                
+                // Эффект смены фона (частицы)
+                createParticles('#2196F3', canvas.width/2, canvas.height/2, 20);
+                
+                // Мягкое перемещение камеры к центру нового фона
+                const targetCameraX = backgrounds[currentBackgroundImage].x + backgroundWidth/2 - canvas.width/2;
+                cameraX = targetCameraX;
+                
+                // Также создаем новые сугробы в новой локации
+                createSnowdriftsForCurrentBackground();
+            }
+        }
+
+        // НОВАЯ ФУНКЦИЯ: Создание сугробов для текущего фона
+        function createSnowdriftsForCurrentBackground() {
+            // Удаляем старые сугробы
+            snowdrifts = snowdrifts.filter(snowdrift => {
+                // Оставляем только сугробы в пределах текущего фона
+                const bg = backgrounds[currentBackgroundImage];
+                return snowdrift.x >= bg.x && snowdrift.x <= bg.x + backgroundWidth;
+            });
+            
+            // Добавляем новые сугробы
+            const bg = backgrounds[currentBackgroundImage];
+            const count = 3 + Math.floor(Math.random() * 3); // 3-5 сугробов на фон
+            
+            for (let i = 0; i < count; i++) {
+                let x, validPosition, attempts = 0;
+                
+                do {
+                    x = bg.x + 100 + Math.random() * (backgroundWidth - 200);
+                    validPosition = true;
+                    
+                    // Проверяем расстояние до других сугробов
+                    for (const snowdrift of snowdrifts) {
+                        if (Math.abs(snowdrift.x - x) < 150) {
+                            validPosition = false;
+                            break;
+                        }
+                    }
+                    
+                    // Проверяем расстояние до игрока
+                    const playerWorldX = cameraX + player.x;
+                    if (Math.abs(playerWorldX - x) < 200) {
+                        validPosition = false;
+                    }
+                    
+                    attempts++;
+                    if (attempts > 50) {
+                        x = bg.x + 100 + i * 150;
+                        break;
+                    }
+                } while (!validPosition);
+                
+                // Выбираем случайное слово
+                const availableWords = WORDS.filter(word => !learnedWords.includes(word.word));
+                const wordData = availableWords.length > 0 
+                    ? availableWords[Math.floor(Math.random() * availableWords.length)]
+                    : WORDS[Math.floor(Math.random() * WORDS.length)];
+                
+                const snowdrift = {
+                    x: x,
+                    y: canvas.height - 100,
+                    width: 70,
+                    height: 50,
+                    word: wordData,
+                    collected: false,
+                    wobble: Math.random() * Math.PI * 2,
+                    wobbleSpeed: 0.02 + Math.random() * 0.03,
+                    wobbleAmount: 2 + Math.random() * 3,
+                    backgroundId: currentBackgroundImage // Добавляем идентификатор фона
+                };
+                
+                snowdrifts.push(snowdrift);
+            }
+        }
+
         // Инициализация игры
         function initGame() {
             gameActive = true;
@@ -619,7 +750,6 @@
             // Начальная позиция игрока
             player.x = canvas.width / 2 - player.width / 2;
             player.y = canvas.height - player.height - 50;
-            cameraX = worldWidth / 2 - canvas.width / 2;
             
             // Сброс игровых переменных
             lives = 3;
@@ -627,16 +757,25 @@
             snowdrifts = [];
             particles = [];
             snowflakes = [];
-            currentLocation = 0;
+            currentBackgroundImage = 0;
+            
+            // Инициализация фонов
+            initBackgrounds();
+            
+            // Начальная позиция камеры
+            cameraX = backgrounds[currentBackgroundImage].x + backgroundWidth/2 - canvas.width/2;
             
             // Создаем снежинки
             initSnowflakes();
             
-            // Создаем сугробы
-            createSnowdrifts();
+            // Создаем сугробы для начального фона
+            createSnowdriftsForCurrentBackground();
             
             // Обновляем UI
             updateUI();
+            
+            // Устанавливаем начальную локацию
+            locationIndicator.textContent = backgrounds[currentBackgroundImage].location.name;
             
             // Запускаем игровой цикл
             gameLoop();
@@ -657,60 +796,12 @@
             }
         }
 
-        // Создание сугробов
-        function createSnowdrifts() {
-            snowdrifts = [];
-            
-            // Создаем 8-10 сугробов
-            const count = 8 + Math.floor(Math.random() * 3);
-            
-            for (let i = 0; i < count; i++) {
-                let x, validPosition, attempts = 0;
-                
-                do {
-                    x = 100 + Math.random() * (worldWidth - 200);
-                    validPosition = true;
-                    
-                    // Проверяем расстояние до других сугробов
-                    for (const snowdrift of snowdrifts) {
-                        if (Math.abs(snowdrift.x - x) < 150) {
-                            validPosition = false;
-                            break;
-                        }
-                    }
-                    
-                    attempts++;
-                    if (attempts > 100) {
-                        x = 100 + i * 200;
-                        break;
-                    }
-                } while (!validPosition);
-                
-                // Выбираем случайное слово
-                const availableWords = WORDS.filter(word => !learnedWords.includes(word.word));
-                const wordData = availableWords.length > 0 
-                    ? availableWords[Math.floor(Math.random() * availableWords.length)]
-                    : WORDS[Math.floor(Math.random() * WORDS.length)];
-                
-                const snowdrift = {
-                    x: x,
-                    y: canvas.height - 100,
-                    width: 70,
-                    height: 50,
-                    word: wordData,
-                    collected: false,
-                    wobble: Math.random() * Math.PI * 2,
-                    wobbleSpeed: 0.02 + Math.random() * 0.03,
-                    wobbleAmount: 2 + Math.random() * 3
-                };
-                
-                snowdrifts.push(snowdrift);
-            }
-        }
-
-        // Обновление игры
+        // ИЗМЕНЕННАЯ ФУНКЦИЯ: Обновление игры
         function updateGame() {
             if (!gameActive || gamePaused) return;
+            
+            // Обновляем фон (проверка смены)
+            updateBackground();
             
             // Обновляем движение игрока
             updatePlayer();
@@ -726,9 +817,6 @@
             
             // Обновляем снежинки
             updateSnowflakes();
-            
-            // Проверяем смену локации
-            checkLocationChange();
         }
 
         // Обновление движения игрока
@@ -755,15 +843,19 @@
             }
         }
 
-        // Обновление камеры
+        // ИЗМЕНЕННАЯ ФУНКЦИЯ: Обновление камеры
         function updateCamera() {
             const targetCameraX = (cameraX + player.x) - canvas.width / 2;
             
             // Плавное движение камеры
             cameraX += (targetCameraX - cameraX) * 0.1;
             
-            // Ограничиваем камеру
-            cameraX = Math.max(0, Math.min(cameraX, worldWidth - canvas.width));
+            // Ограничиваем камеру в пределах текущего фона
+            const currentBg = backgrounds[currentBackgroundImage];
+            const minCameraX = currentBg.x - 100; // Небольшой отступ от левого края
+            const maxCameraX = currentBg.x + backgroundWidth - canvas.width + 100; // Отступ от правого края
+            
+            cameraX = Math.max(minCameraX, Math.min(cameraX, maxCameraX));
         }
 
         // Обновление анимации сугробов
@@ -824,20 +916,6 @@
             });
         }
 
-        // Проверка смены локации
-        function checkLocationChange() {
-            const worldX = cameraX + player.x;
-            const locationIndex = Math.floor((worldX / worldWidth) * LOCATIONS.length);
-            
-            if (locationIndex !== currentLocation) {
-                currentLocation = Math.max(0, Math.min(locationIndex, LOCATIONS.length - 1));
-                locationIndicator.textContent = LOCATIONS[currentLocation].name;
-                
-                // Создаем частицы для эффекта смены локации
-                createParticles('#2196F3', canvas.width/2, canvas.height/2, 30);
-            }
-        }
-
         // Проверка столкновения
         function checkCollision(rect1, rect2) {
             return rect1.x < rect2.x + rect2.width &&
@@ -846,23 +924,30 @@
                    rect1.y + rect1.height > rect2.y;
         }
 
-        // Начало игры со словом
+        // ИЗМЕНЕННАЯ ФУНКЦИЯ: Начало игры со словом (с проверкой расстояния)
         function startWordGame(snowdrift) {
             if (gamePaused || currentWord) return;
             
-            currentWord = snowdrift.word;
-            snowdrift.collected = true;
-            currentSelection = new Array(currentWord.correct.length).fill(null);
-            currentMissingIndex = 0;
+            // Проверяем, что персонаж действительно стоит рядом с сугробом
+            const playerWorldX = cameraX + player.x;
+            const snowdriftCenterX = snowdrift.x + snowdrift.width/2;
+            const distance = Math.abs(playerWorldX - snowdriftCenterX);
             
-            gamePaused = true;
-            showWordOverlay();
-            
-            // На мобильных показываем клавиатуру
-            if (isMobile()) {
-                mobileKeyboard.style.display = 'block';
-                // Поднимаем индикатор локации выше, чтобы не перекрывался
-                locationIndicator.style.top = '80px';
+            // Только если достаточно близко (в пределах 100 пикселей)
+            if (distance < 100) {
+                currentWord = snowdrift.word;
+                snowdrift.collected = true;
+                currentSelection = new Array(currentWord.correct.length).fill(null);
+                currentMissingIndex = 0;
+                
+                gamePaused = true;
+                showWordOverlay();
+                
+                // На мобильных показываем клавиатуру
+                if (isMobile()) {
+                    mobileKeyboard.style.display = 'block';
+                    locationIndicator.style.top = '80px';
+                }
             }
         }
 
@@ -992,10 +1077,12 @@
 
         // Создание нового сугроба
         function createNewSnowdrift() {
+            const bg = backgrounds[currentBackgroundImage];
+            
             let x, validPosition, attempts = 0;
             
             do {
-                x = 100 + Math.random() * (worldWidth - 200);
+                x = bg.x + 100 + Math.random() * (backgroundWidth - 200);
                 validPosition = true;
                 
                 // Проверяем расстояние до других сугробов
@@ -1014,7 +1101,7 @@
                 
                 attempts++;
                 if (attempts > 100) {
-                    x = 100 + snowdrifts.length * 200;
+                    x = bg.x + 100 + snowdrifts.length * 200;
                     break;
                 }
             } while (!validPosition);
@@ -1034,7 +1121,8 @@
                 collected: false,
                 wobble: Math.random() * Math.PI * 2,
                 wobbleSpeed: 0.02 + Math.random() * 0.03,
-                wobbleAmount: 2 + Math.random() * 3
+                wobbleAmount: 2 + Math.random() * 3,
+                backgroundId: currentBackgroundImage
             };
             
             snowdrifts.push(snowdrift);
@@ -1113,17 +1201,47 @@
             return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         }
 
-        // Отрисовка игры
+        // ИЗМЕНЕННАЯ ФУНКЦИЯ: Отрисовка игры
         function drawGame() {
             // Очищаем canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // Рисуем фон (повторяем по горизонтали)
-            if (images.backgrounds[currentLocation]) {
-                const bg = images.backgrounds[currentLocation];
-                const pattern = ctx.createPattern(bg, 'repeat-x');
-                ctx.fillStyle = pattern;
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            // Рисуем текущий фон
+            const currentBg = backgrounds[currentBackgroundImage];
+            if (currentBg && currentBg.image) {
+                ctx.drawImage(
+                    currentBg.image,
+                    currentBg.x - cameraX,
+                    0,
+                    backgroundWidth,
+                    canvas.height
+                );
+                
+                // Если нужно, рисуем соседние фоны для плавного перехода
+                if (currentBackgroundImage > 0) {
+                    const prevBg = backgrounds[currentBackgroundImage - 1];
+                    ctx.globalAlpha = 0.3; // Полупрозрачный для плавности
+                    ctx.drawImage(
+                        prevBg.image,
+                        prevBg.x - cameraX,
+                        0,
+                        backgroundWidth,
+                        canvas.height
+                    );
+                }
+                
+                if (currentBackgroundImage < backgrounds.length - 1) {
+                    const nextBg = backgrounds[currentBackgroundImage + 1];
+                    ctx.globalAlpha = 0.3; // Полупрозрачный для плавности
+                    ctx.drawImage(
+                        nextBg.image,
+                        nextBg.x - cameraX,
+                        0,
+                        backgroundWidth,
+                        canvas.height
+                    );
+                }
+                ctx.globalAlpha = 1;
             }
             
             // Рисуем дорогу
@@ -1209,6 +1327,19 @@
                 ctx.beginPath();
                 ctx.arc(player.x + player.width/2, player.y + 40, 25, 0, Math.PI * 2);
                 ctx.fill();
+            }
+            
+            // Рисуем крышу (если есть)
+            if (images.roof && Math.random() > 0.7) {
+                ctx.globalAlpha = 0.8;
+                ctx.drawImage(
+                    images.roof,
+                    canvas.width - 200,
+                    canvas.height - 250,
+                    200,
+                    150
+                );
+                ctx.globalAlpha = 1;
             }
         }
 

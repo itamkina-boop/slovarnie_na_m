@@ -99,24 +99,54 @@
             max-width: 500px;
             display: none;
             box-shadow: 0 0 40px rgba(76, 175, 80, 0.5);
+            text-align: center;
         }
         
         #wordDisplay {
-            font-size: 36px;
+            font-size: 48px;
             text-align: center;
             margin: 20px 0;
             min-height: 60px;
             letter-spacing: 2px;
             font-weight: bold;
+            font-family: 'Georgia', serif;
+            text-shadow: 2px 2px 0 #000;
         }
         
-        #timer {
-            font-size: 28px;
-            font-weight: bold;
-            text-align: center;
-            color: #FFD700;
-            margin: 20px 0;
-            text-shadow: 2px 2px 0 #000;
+        .word-char {
+            display: inline-block;
+            margin: 0 2px;
+            position: relative;
+        }
+        
+        .word-char::after {
+            content: '';
+            position: absolute;
+            left: -2px;
+            right: -2px;
+            bottom: -5px;
+            height: 3px;
+            background: #4CAF50;
+            border-radius: 2px;
+            opacity: 0.5;
+        }
+        
+        .missing-char {
+            color: #2196F3;
+            animation: pulse 1s infinite;
+            text-decoration: underline;
+            text-decoration-thickness: 3px;
+            text-underline-offset: 5px;
+        }
+        
+        .correct-char {
+            color: #4CAF50;
+            text-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+        }
+        
+        .wrong-char {
+            color: #FF5252;
+            text-shadow: 0 0 10px rgba(255, 82, 82, 0.5);
         }
         
         #feedback {
@@ -199,14 +229,6 @@
         
         #nextLevelBtn {
             background: linear-gradient(45deg, #FF4081, #7B1FA2);
-        }
-        
-        .confetti {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            pointer-events: none;
-            z-index: 999;
         }
         
         .snowflake {
@@ -296,20 +318,6 @@
             color: #FFD700;
         }
         
-        #keyboardHint {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 10px 15px;
-            border-radius: 15px;
-            border: 2px solid #4CAF50;
-            font-size: 14px;
-            color: #FFD700;
-            z-index: 100;
-            display: none;
-        }
-        
         #loadingScreen {
             position: fixed;
             top: 0;
@@ -348,6 +356,86 @@
             transition: width 0.3s ease;
         }
         
+        /* Мобильная клавиатура */
+        #mobileKeyboard {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 10px;
+            display: none;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 5px;
+            z-index: 300;
+            backdrop-filter: blur(10px);
+            border-top: 2px solid #4CAF50;
+        }
+        
+        .keyboard-row {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            width: 100%;
+            margin: 5px 0;
+        }
+        
+        .vowel-key {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #2196F3, #1976D2);
+            border: 2px solid white;
+            border-radius: 10px;
+            color: white;
+            font-size: 22px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s;
+        }
+        
+        .vowel-key:hover, .vowel-key:active {
+            transform: scale(0.95);
+            background: linear-gradient(135deg, #1976D2, #1565C0);
+            box-shadow: 0 0 10px rgba(33, 150, 243, 0.5);
+        }
+        
+        .action-key {
+            width: 100px;
+            height: 50px;
+            background: linear-gradient(135deg, #4CAF50, #2E7D32);
+            border: 2px solid white;
+            border-radius: 10px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s;
+        }
+        
+        .action-key:hover, .action-key:active {
+            transform: scale(0.95);
+            background: linear-gradient(135deg, #2E7D32, #1B5E20);
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+        }
+        
+        .delete-key {
+            background: linear-gradient(135deg, #FF5252, #D32F2F);
+        }
+        
+        .delete-key:hover, .delete-key:active {
+            background: linear-gradient(135deg, #D32F2F, #C62828);
+            box-shadow: 0 0 10px rgba(255, 82, 82, 0.5);
+        }
+        
         @media (max-width: 768px) {
             #ui {
                 top: 10px;
@@ -366,7 +454,19 @@
             }
             
             #wordDisplay {
-                font-size: 28px;
+                font-size: 36px;
+            }
+            
+            .vowel-key {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
+            
+            .action-key {
+                width: 80px;
+                height: 40px;
+                font-size: 14px;
             }
             
             .celebration-text {
@@ -389,10 +489,28 @@
                 width: 250px;
             }
             
-            #dictionary, #keyboardHint {
+            #dictionary {
                 bottom: 10px;
                 max-width: 200px;
                 max-height: 150px;
+                font-size: 12px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            #wordDisplay {
+                font-size: 28px;
+            }
+            
+            .vowel-key {
+                width: 35px;
+                height: 35px;
+                font-size: 16px;
+            }
+            
+            .action-key {
+                width: 70px;
+                height: 35px;
                 font-size: 12px;
             }
         }
@@ -431,7 +549,7 @@
                 <div class="progress-bar">
                     <div id="progressFill" class="progress-fill" style="width: 0%"></div>
                 </div>
-                <div class="level-info" id="levelInfo">Время: 15 сек | Сложность: Нормальная</div>
+                <div class="level-info" id="levelInfo">Сложность: Нормальная</div>
                 <div id="levelBadge" class="level-badge">Новичок</div>
             </div>
         </div>
@@ -443,12 +561,31 @@
             <div id="dictionaryWords"></div>
         </div>
         
-        <div id="keyboardHint">⌨️ Вводите буквы с клавиатуры</div>
-        
         <div id="wordPopup">
-            <div id="timer">15</div>
             <div id="wordDisplay"></div>
             <div id="feedback"></div>
+        </div>
+        
+        <!-- Мобильная клавиатура -->
+        <div id="mobileKeyboard">
+            <div class="keyboard-row">
+                <div class="vowel-key" data-letter="а">А</div>
+                <div class="vowel-key" data-letter="е">Е</div>
+                <div class="vowel-key" data-letter="ё">Ё</div>
+                <div class="vowel-key" data-letter="и">И</div>
+                <div class="vowel-key" data-letter="о">О</div>
+            </div>
+            <div class="keyboard-row">
+                <div class="vowel-key" data-letter="у">У</div>
+                <div class="vowel-key" data-letter="ы">Ы</div>
+                <div class="vowel-key" data-letter="э">Э</div>
+                <div class="vowel-key" data-letter="ю">Ю</div>
+                <div class="vowel-key" data-letter="я">Я</div>
+            </div>
+            <div class="keyboard-row">
+                <div class="action-key delete-key">Удалить</div>
+                <div class="action-key" id="submitKey">Готово</div>
+            </div>
         </div>
         
         <div id="celebration">
@@ -510,7 +647,6 @@
 
         const LEVEL_SETTINGS = {
             1: { 
-                time: 15, 
                 speed: 1, 
                 scoreMultiplier: 1, 
                 snowdriftSpeed: 2, 
@@ -519,7 +655,6 @@
                 maxSnowdrifts: 15
             },
             2: { 
-                time: 12, 
                 speed: 1.3, 
                 scoreMultiplier: 1.5, 
                 snowdriftSpeed: 3, 
@@ -528,7 +663,6 @@
                 maxSnowdrifts: 20
             },
             3: { 
-                time: 10, 
                 speed: 1.6, 
                 scoreMultiplier: 2, 
                 snowdriftSpeed: 4, 
@@ -552,11 +686,9 @@
         let currentWord = null;
         let currentSelection = [];
         let currentMissingIndex = 0;
-        let timer = 15;
-        let timerInterval = null;
         let snowflakes = [];
         let particles = [];
-        let player = { x: 0, y: 0, width: 80, height: 120, direction: 'right' };
+        let player = { x: 0, y: 0, width: 120, height: 180, direction: 'right' }; // Увеличили размер
         let snowdrifts = [];
         let animationId = null;
         let allWordsCompleted = false;
@@ -571,7 +703,6 @@
             background: null,
             janitor_left: null,
             janitor_right: null,
-            roof: null,
             snowdrift: null
         };
 
@@ -590,9 +721,10 @@
         const dictionaryWords = document.getElementById('dictionaryWords');
         const wordPopup = document.getElementById('wordPopup');
         const wordDisplay = document.getElementById('wordDisplay');
-        const timerElement = document.getElementById('timer');
         const feedbackElement = document.getElementById('feedback');
-        const keyboardHint = document.getElementById('keyboardHint');
+        const mobileKeyboard = document.getElementById('mobileKeyboard');
+        const vowelKeys = document.querySelectorAll('.vowel-key');
+        const submitKey = document.getElementById('submitKey');
         const celebration = document.getElementById('celebration');
         const celebrationTitle = document.getElementById('celebrationTitle');
         const celebrationSubtext = document.getElementById('celebrationSubtext');
@@ -607,7 +739,6 @@
                 { key: 'background', src: 'winter_background.png' },
                 { key: 'janitor_left', src: 'janitor_left.png' },
                 { key: 'janitor_right', src: 'janitor_right.png' },
-                { key: 'roof', src: 'roof.png' },
                 { key: 'snowdrift', src: 'snowdrift.png' }
             ];
 
@@ -666,7 +797,7 @@
             resizeCanvas();
             
             player.x = canvas.width / 2 - player.width / 2;
-            player.y = canvas.height - 150;
+            player.y = canvas.height - player.height - 20; // Ниже, чтобы стоял на земле
             player.direction = 'right';
             
             initSnowflakes();
@@ -693,15 +824,54 @@
             
             setTimeout(() => createSnowdrift(), 1000);
             
-            // Показываем подсказку про клавиатуру для ПК
-            if (!isMobile()) {
-                keyboardHint.style.display = 'block';
+            // Показываем мобильную клавиатуру на мобильных устройствах
+            if (isMobile()) {
+                setupMobileKeyboard();
             }
         }
 
         // Проверка мобильного устройства
         function isMobile() {
             return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+
+        // Настройка мобильной клавиатуры
+        function setupMobileKeyboard() {
+            // Добавляем обработчики для гласных
+            vowelKeys.forEach(key => {
+                key.addEventListener('click', () => {
+                    const letter = key.getAttribute('data-letter');
+                    selectLetter(letter);
+                });
+                
+                key.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    key.style.transform = 'scale(0.95)';
+                });
+                
+                key.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    key.style.transform = 'scale(1)';
+                    const letter = key.getAttribute('data-letter');
+                    selectLetter(letter);
+                });
+            });
+            
+            // Кнопка "Удалить"
+            document.querySelector('.delete-key').addEventListener('click', () => {
+                if (currentMissingIndex > 0) {
+                    currentMissingIndex--;
+                    currentSelection[currentMissingIndex] = null;
+                    updateWordDisplay();
+                }
+            });
+            
+            // Кнопка "Готово"
+            submitKey.addEventListener('click', () => {
+                if (currentMissingIndex >= currentWord.correct.length) {
+                    completeWord(true);
+                }
+            });
         }
 
         // Создание сугроба
@@ -713,11 +883,8 @@
             
             if (now - lastSnowdriftTime < settings.snowdriftInterval) return;
             
-            // Проверяем вертикальное переполнение
-            if (checkVerticalOverflow()) {
-                gameOver();
-                return;
-            }
+            // Проверяем максимальное количество сугробов
+            if (snowdrifts.length >= settings.maxSnowdrifts) return;
             
             // Получаем слово
             let wordData;
@@ -736,31 +903,32 @@
             }
             
             // Находим свободное место для нового сугроба
-            let x, y, attempts = 0;
+            let x, attempts = 0;
+            let columnOccupied = false;
+            
             do {
                 x = 50 + Math.random() * (canvas.width - 100);
+                columnOccupied = false;
                 
-                // Находим максимальную высоту сугроба в этом столбце
-                let maxY = canvas.height - 150; // Начальная высота (земля)
-                
+                // Проверяем, занят ли этот столбец
                 for (const snowdrift of snowdrifts) {
-                    if (Math.abs(snowdrift.x - x) < 60) { // Проверяем столбцы шириной 60px
-                        maxY = Math.min(maxY, snowdrift.y - 10); // Ставим выше предыдущего
+                    if (Math.abs(snowdrift.x - x) < 60) {
+                        columnOccupied = true;
+                        break;
                     }
                 }
                 
-                y = maxY - 70; // Отступаем вверх
                 attempts++;
-                
-                if (attempts > 100) {
-                    y = -100; // Если не нашли место, падаем сверху
-                    break;
-                }
-            } while (y < -100); // Не выше чем -100
+            } while (columnOccupied && attempts < 50);
+            
+            // Если все столбцы заняты, ставим в случайное место
+            if (columnOccupied) {
+                x = 50 + Math.random() * (canvas.width - 100);
+            }
             
             const snowdrift = {
                 x: x,
-                y: y,
+                y: -70, // Начинаем сверху
                 width: 70,
                 height: 50,
                 word: wordData,
@@ -772,29 +940,19 @@
                 rotationSpeed: (Math.random() - 0.5) * 0.05,
                 wobble: Math.random() * Math.PI * 2,
                 wobbleSpeed: 0.03 + Math.random() * 0.02,
-                targetY: canvas.height - 150 // Целевая позиция на земле
+                targetY: canvas.height - 70 // Целевая позиция в самом низу
             };
             
-            // Если есть сугроб в этом столбце, корректируем targetY
+            // Если есть сугроб в этом столбце, корректируем targetY выше
             for (const other of snowdrifts) {
                 if (Math.abs(other.x - x) < 60 && other.onGround) {
-                    snowdrift.targetY = other.y - 10;
+                    snowdrift.targetY = other.y - 60; // Ставим на предыдущий сугроб
+                    break;
                 }
             }
             
             snowdrifts.push(snowdrift);
             lastSnowdriftTime = now;
-        }
-
-        // Проверка вертикального переполнения
-        function checkVerticalOverflow() {
-            // Проверяем, есть ли сугробы, которые достигли верха экрана
-            for (const snowdrift of snowdrifts) {
-                if (snowdrift.y < 50) { // Если сугроб выше 50px от верха
-                    return true;
-                }
-            }
-            return false;
         }
 
         // Инициализация снежинок
@@ -913,6 +1071,21 @@
                     rotationSpeed: (Math.random() - 0.5) * 10
                 });
             }
+            
+            // Опускаем сугробы выше в этом столбце
+            for (let i = 0; i < snowdrifts.length; i++) {
+                if (Math.abs(snowdrifts[i].x - snowdrift.x) < 60 && 
+                    snowdrifts[i].y < snowdrift.y) {
+                    // Плавно опускаем сугроб вниз
+                    snowdrifts[i].targetY += 60;
+                    
+                    // Если сугроб уже на земле, начинаем движение
+                    if (snowdrifts[i].onGround) {
+                        snowdrifts[i].onGround = false;
+                        snowdrifts[i].speed = LEVEL_SETTINGS[level].snowdriftSpeed;
+                    }
+                }
+            }
         }
 
         // Проверка столкновения
@@ -932,17 +1105,18 @@
             currentSelection = new Array(currentWord.correct.length).fill(null);
             currentMissingIndex = 0;
             
-            timer = LEVEL_SETTINGS[level].time;
-            
             showWordPopup();
-            startTimer();
         }
 
         // Показ попапа со словом
         function showWordPopup() {
             wordPopup.style.display = 'block';
             updateWordDisplay();
-            updateTimerDisplay();
+            
+            // Показываем мобильную клавиатуру на мобильных устройствах
+            if (isMobile()) {
+                mobileKeyboard.style.display = 'flex';
+            }
         }
 
         // Скрытие попапа
@@ -952,6 +1126,9 @@
             feedbackElement.className = '';
             currentWord = null;
             currentSnowdriftId = null;
+            
+            // Скрываем мобильную клавиатуру
+            mobileKeyboard.style.display = 'none';
         }
 
         // Обновление отображения слова
@@ -962,21 +1139,26 @@
             let missingIndex = 0;
             
             for (let i = 0; i < currentWord.word.length; i++) {
+                const char = currentWord.word[i];
+                
                 if (currentWord.missing.includes(i)) {
                     const userLetter = currentSelection[missingIndex];
+                    let className = 'word-char missing-char';
+                    
                     if (userLetter) {
                         const correctLetter = currentWord.correct[missingIndex];
                         if (userLetter === correctLetter) {
-                            display += `<span style="color: #4CAF50; font-weight: bold;">${userLetter}</span>`;
+                            className = 'word-char correct-char';
                         } else {
-                            display += `<span style="color: #FF5252; font-weight: bold;">${userLetter}</span>`;
+                            className = 'word-char wrong-char';
                         }
+                        display += `<span class="${className}">${userLetter}</span>`;
                     } else {
-                        display += '<span style="color: #2196F3; font-weight: bold;">_</span>';
+                        display += `<span class="${className}">_</span>`;
                     }
                     missingIndex++;
                 } else {
-                    display += currentWord.word[i];
+                    display += `<span class="word-char">${char}</span>`;
                 }
             }
             
@@ -1002,8 +1184,7 @@
                 currentMissingIndex++;
                 
                 if (currentMissingIndex >= currentWord.correct.length) {
-                    completeWord(true);
-                    return;
+                    setTimeout(() => completeWord(true), 500);
                 }
             } else {
                 feedbackElement.textContent = '✗ Неправильно';
@@ -1017,16 +1198,13 @@
                 currentMissingIndex++;
                 
                 if (currentMissingIndex >= currentWord.correct.length) {
-                    completeWord(false);
-                    return;
+                    setTimeout(() => completeWord(false), 500);
                 }
             }
         }
 
         // Завершение слова
         function completeWord(isCorrect) {
-            clearInterval(timerInterval);
-            
             const wordKey = currentWord.word;
             const fullWord = getFullWord(currentWord);
             
@@ -1058,14 +1236,6 @@
                     const snowdrift = snowdrifts[index];
                     explodeSnowdrift(snowdrift);
                     snowdrifts.splice(index, 1);
-                    
-                    // Корректируем позиции сугробов выше
-                    for (let i = 0; i < snowdrifts.length; i++) {
-                        if (Math.abs(snowdrifts[i].x - snowdrift.x) < 60 && 
-                            snowdrifts[i].y < snowdrift.y) {
-                            snowdrifts[i].targetY += snowdrift.height + 10;
-                        }
-                    }
                 }
                 
                 // Проверяем, изучены ли все слова для текущего уровня
@@ -1085,7 +1255,7 @@
             
             setTimeout(() => {
                 hideWordPopup();
-            }, 1000);
+            }, 500);
         }
 
         // Потеря жизни
@@ -1121,37 +1291,6 @@
             }
             
             return result;
-        }
-
-        // Таймер
-        function startTimer() {
-            clearInterval(timerInterval);
-            updateTimerDisplay();
-            
-            timerInterval = setInterval(() => {
-                timer--;
-                updateTimerDisplay();
-                
-                if (timer <= 0) {
-                    clearInterval(timerInterval);
-                    completeWord(false);
-                }
-            }, 1000);
-        }
-
-        function updateTimerDisplay() {
-            timerElement.textContent = timer;
-            
-            if (timer <= 5) {
-                timerElement.style.color = '#FF5252';
-                timerElement.style.animation = 'pulse 0.5s infinite';
-            } else if (timer <= Math.floor(LEVEL_SETTINGS[level].time / 2)) {
-                timerElement.style.color = '#FF9800';
-                timerElement.style.animation = '';
-            } else {
-                timerElement.style.color = '#4CAF50';
-                timerElement.style.animation = '';
-            }
         }
 
         // Показ экрана поздравления
@@ -1192,7 +1331,7 @@
                 }
             } else {
                 celebrationTitle.textContent = '❄️ ИГРА ОКОНЧЕНА ❄️';
-                celebrationSubtext.textContent = 'Сугробы заполнили весь экран!';
+                celebrationSubtext.textContent = 'Попробуйте ещё раз!';
                 nextLevelBtn.style.display = 'none';
                 
                 const statsHTML = `
@@ -1204,7 +1343,7 @@
                             📚 Изучено слов: ${learnedWords.size}
                         </div>
                         <div style="font-size: 18px; color: #2196F3; margin: 10px 0;">
-                            🎯 Точность: ${Math.round((learnedWords.size / (learnedWords.size + (3 - lives))) * 100)}%
+                            🎯 Точность: ${learnedWords.size > 0 ? Math.round((learnedWords.size / (learnedWords.size + (3 - lives))) * 100) : 0}%
                         </div>
                         <div style="font-size: 18px; color: #FF9800; margin: 10px 0;">
                             🏆 Уровень: ${LEVEL_NAMES[level]}
@@ -1383,20 +1522,6 @@
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
             }
             
-            // Крыша внизу, не деформированная
-            if (images.roof) {
-                const roofAspectRatio = 1.5; // Соотношение сторон крыши
-                const roofWidth = canvas.width * 0.7; // 70% ширины экрана
-                const roofHeight = roofWidth / roofAspectRatio;
-                const roofX = canvas.width/2 - roofWidth/2;
-                const roofY = canvas.height - roofHeight - 50; // В уровень с персонажем
-                ctx.drawImage(images.roof, roofX, roofY, roofWidth, roofHeight);
-            } else {
-                // Запасной вариант
-                ctx.fillStyle = '#5D4037';
-                ctx.fillRect(canvas.width/4, canvas.height * 0.6, canvas.width/2, canvas.height * 0.4);
-            }
-            
             // Снежинки
             snowflakes.forEach(flake => {
                 ctx.globalAlpha = flake.opacity;
@@ -1409,7 +1534,7 @@
             
             // Земля (снег)
             ctx.fillStyle = '#E3F2FD';
-            ctx.fillRect(0, canvas.height - 50, canvas.width, 50);
+            ctx.fillRect(0, canvas.height - 30, canvas.width, 30);
             
             // Игрок (дворник)
             let playerImage = player.direction === 'left' ? images.janitor_left : images.janitor_right;
@@ -1511,7 +1636,7 @@
             wordsCountElement.textContent = `${learnedWords.size}/${LEVEL_SETTINGS[level].wordsPerLevel}`;
             levelElement.textContent = level;
             
-            levelInfo.textContent = `Время: ${LEVEL_SETTINGS[level].time} сек | Сугробы: ${snowdrifts.length}`;
+            levelInfo.textContent = `Сложность: ${LEVEL_NAMES[level]}`;
             levelBadge.textContent = LEVEL_NAMES[level];
             
             const colors = ['#4CAF50', '#2196F3', '#FF9800'];
@@ -1578,7 +1703,7 @@
             canvas.height = window.innerHeight;
             
             player.x = canvas.width / 2 - player.width / 2;
-            player.y = canvas.height - 150;
+            player.y = canvas.height - player.height - 20;
         }
 
         // Управление игроком
@@ -1641,9 +1766,9 @@
             if (currentWord !== null) {
                 // Ввод букв с клавиатуры в мини-игре
                 const key = e.key.toLowerCase();
-                const russianLetters = 'абвгдеёжзийклмнопрстуфхцчшщъыьэюя';
+                const russianVowels = 'аеёиоуыэюя';
                 
-                if (russianLetters.includes(key)) {
+                if (russianVowels.includes(key)) {
                     selectLetter(key);
                     e.preventDefault();
                 } else if (e.key === 'Backspace') {
